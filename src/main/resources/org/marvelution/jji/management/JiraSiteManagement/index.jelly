@@ -1,0 +1,142 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+	<l:layout permission="${app.ADMINISTER}" title="${%title}" norefresh="true">
+		<l:header>
+			<style>
+				ul.legend {
+					list-style: none;
+					position: relative;
+					padding-left: 0;
+				}
+				ul.legend li {
+					display: inline-block;
+					padding: 5px;
+				}
+				ul.legend li img {
+					position: relative;
+					left: 0;
+				}
+				.error pre {
+					max-width: calc(80vw);
+				}
+			</style>
+		</l:header>
+		<l:side-panel />
+		<l:main-panel>
+			<h1>${%title}</h1>
+			<j:choose>
+				<j:when test="${empty(it.sites)}">
+					<p><b>${%no.sites}</b></p>
+				</j:when>
+				<j:otherwise>
+					<table id="sites" class="sortable pane bigtable">
+						<thead>
+							<tr style="border-top: 0;">
+								<th initialSortDir="down">${%name}</th>
+								<th initialSortDir="down">${%integration.url}</th>
+								<th width="20px">${%actions}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<j:forEach var="site" items="${it.sites}">
+								<tr data-site-uri="${site.uri}">
+									<td>${site.name}</td>
+									<td>${site.uri}</td>
+									<td>
+										<a href="#" class="navigate-to-site">
+											<img src="${imagesURL}/svgs/next.svg" title="${%navigate.to.site}" width="20" height="20" />
+										</a>
+										<a href="#" class="remove-site">
+											<img src="${imagesURL}/svgs/stop.svg" title="${%remove.site}" width="20" height="20" />
+										</a>
+									</td>
+								</tr>
+							</j:forEach>
+						</tbody>
+					</table>
+					<ul class="legend">
+						<li>
+							<img src="${imagesURL}/svgs/next.svg" title="${%navigate.to.site}" width="20" height="20" />
+							${%navigate.to.site}
+						</li>
+						<li>
+							<img src="${imagesURL}/svgs/stop.svg" title="${%remove.site}" width="20" height="20" />
+							${%remove.site}
+						</li>
+					</ul>
+					<script>
+						(function() {
+							if (window.jQuery === window.$$) {
+								// jQuery is used as framework.
+								$$(document).ajaxError(function(event, jqXhr) {
+									alert(jqXhr.statusText);
+								});
+							} else {
+								// Assume Prototype is the framework used, like the JavaScriptMethod binding does.
+								Ajax.Responders.register({
+									onComplete: function(response) {
+										if (!response.success()) {
+											alert(response.transport.statusText);
+										}
+									}
+								});
+							}
+
+							var JJI = {
+								helper: <st:bind value="${it}" />
+							};
+
+							$$('tr[data-site-uri] a').each(function(element) {
+								element.onclick = function() {
+									var row = this.up('tr');
+									var url = row.readAttribute('data-site-uri');
+
+									if (this.hasClassName('remove-site')) {
+										JJI.helper.deleteSite(url, function () {
+											if (row.up('tbody').childElements('tr').length === 1) {
+												window.location.reload();
+											} else {
+												row.remove();
+											}
+										});
+									} else {
+										JJI.helper.getSiteUrl(url, function (response) {
+											if (confirm('Navigate to: ' + response.responseJSON)) {
+												window.location = response.responseJSON;
+											}
+										});
+									}
+								};
+							});
+						})();
+					</script>
+				</j:otherwise>
+			</j:choose>
+			<h2>${%site.registration.token.title}</h2>
+            <p>${%site.registration.token.description}</p>
+			<div>
+                <f:form method="post" name="jji" action="submit">
+					<j:if test="${!empty(error)}">
+						<f:block>
+							<div class="error">
+								<p>${%invalid.site.registration.token}</p>
+								<pre>${error}</pre>
+							</div>
+						</f:block>
+					</j:if>
+                    <f:block>
+                        <f:entry title="${%site.registration.token}" field="token" help="${it.baseHelpUrl}token.html">
+                            <f:textarea />
+                        </f:entry>
+                        <f:entry title="${%site.registration.token.secret}" field="secret" help="${it.baseHelpUrl}tokenSecret.html">
+                            <f:textbox />
+                        </f:entry>
+                    </f:block>
+                    <f:block>
+                        <f:submit value="${%register.site}" />
+                    </f:block>
+                </f:form>
+            </div>
+		</l:main-panel>
+	</l:layout>
+</j:jelly>

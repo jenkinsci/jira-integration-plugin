@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+	This plugin adds features to improve integration with <a target="_blank" href="https://www.atlassian.com/software/jira">Atlassian Jira</a>
+</div>
