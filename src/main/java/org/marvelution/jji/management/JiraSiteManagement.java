@@ -124,11 +124,13 @@ public class JiraSiteManagement
 		return "/plugin/" + JiraPlugin.SHORT_NAME + "/help/";
 	}
 
+	@RequirePOST
 	public synchronized void doSubmit(
 			StaplerRequest req,
 			StaplerResponse rsp)
 			throws IOException, ServletException
 	{
+		Jenkins.get().getACL().checkPermission(Jenkins.ADMINISTER);
 		JSONObject form = req.getSubmittedForm();
 		try
 		{
@@ -189,6 +191,7 @@ public class JiraSiteManagement
 	}
 
 	@RequirePOST
+	@SuppressWarnings("lgtm[jenkins/no-permission-check]")
 	public void doUnregister(StaplerRequest request)
 			throws IOException
 	{

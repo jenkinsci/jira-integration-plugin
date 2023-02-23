@@ -23,10 +23,10 @@
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<version>4.33</version>
+		<version>4.55</version>
 	</parent>
-	<groupId>org.marvelution.jji</groupId>
-	<artifactId>jenkins-jira-plugin</artifactId>
+	<groupId>io.jenkins.plugins</groupId>
+	<artifactId>jira-integration</artifactId>
 	<version>${revision}-${changelist}</version>
 	<packaging>hpi</packaging>
 
@@ -62,9 +62,8 @@
 		<filterModified>true</filterModified>
 
 		<jenkins.integration.common.version>1.20</jenkins.integration.common.version>
-		<jenkins.version>2.249.3</jenkins.version>
-		<jenkins.baseline>2.249</jenkins.baseline>
-		<jenkins-test-harness.version>2.49</jenkins-test-harness.version>
+		<jenkins.baseline>2.361</jenkins.baseline>
+		<jenkins.version>${jenkins.baseline}.4</jenkins.version>
 		<jetty.version>9.4.5.v20170502</jetty.version>
 		<okhttp-api.version>4.9.3-105.vb96869f8ac3a</okhttp-api.version>
 		<job-dsl.version>1.50</job-dsl.version>
@@ -81,7 +80,7 @@
 			<dependency>
 				<groupId>io.jenkins.tools.bom</groupId>
 				<artifactId>bom-${jenkins.baseline}.x</artifactId>
-				<version>841.vd6e713d848ab</version>
+				<version>1841.v7b_22c5218e1a</version>
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>

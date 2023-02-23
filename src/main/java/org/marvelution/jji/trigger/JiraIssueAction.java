@@ -4,6 +4,7 @@ import hudson.model.*;
 
 import static org.marvelution.jji.JiraPlugin.*;
 
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class JiraIssueAction
 		implements Action
 {

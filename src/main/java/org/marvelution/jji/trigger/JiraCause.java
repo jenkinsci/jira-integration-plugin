@@ -11,6 +11,7 @@ import org.kohsuke.stapler.export.*;
  * @author Mark Rekveld
  * @since 3.3.0
  */
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class JiraCause
 		extends Cause
 {

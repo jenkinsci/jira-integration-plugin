@@ -53,6 +53,7 @@ public class JiraBuildTriggerAction<JobT extends Job<JobT, ?> & Queue.Task>
 	}
 
 	@RequirePOST
+	@SuppressWarnings("lgtm[jenkins/no-permission-check]")
 	public void doBuild(
 			StaplerRequest request,
 			StaplerResponse response)
