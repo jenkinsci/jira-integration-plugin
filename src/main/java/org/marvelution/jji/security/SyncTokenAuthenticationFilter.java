@@ -15,8 +15,8 @@ import org.marvelution.jji.synctoken.exceptions.*;
 import com.nimbusds.jwt.*;
 import hudson.init.*;
 import hudson.util.*;
-import org.acegisecurity.*;
-import org.acegisecurity.context.*;
+import org.springframework.security.access.*;
+import org.springframework.security.core.context.*;
 
 public class SyncTokenAuthenticationFilter
 		implements Filter

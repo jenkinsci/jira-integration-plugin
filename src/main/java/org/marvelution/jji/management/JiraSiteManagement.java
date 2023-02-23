@@ -2,7 +2,6 @@ package org.marvelution.jji.management;
 
 import java.io.*;
 import java.net.*;
-import java.util.Optional;
 import java.util.*;
 import java.util.logging.*;
 import javax.inject.*;
@@ -107,10 +106,10 @@ public class JiraSiteManagement
 				throw HttpResponses.errorWithoutStack(500, site_get_url_failed());
 			}
 		}).findFirst().map(site -> {
-			try
+			try (Response response = httpClient.newCall(site.createGetBaseUrlRequest()).execute();
+			     ResponseBody body = response.body())
 			{
-				Response response = httpClient.newCall(site.createGetBaseUrlRequest()).execute();
-				return response.body().string();
+				return body.string();
 			}
 			catch (Exception e)
 			{
@@ -143,11 +142,13 @@ public class JiraSiteManagement
 					.withSharedSecret(claimsSet.getStringClaim("secret"))
 					.withPostJson(claimsSet.getBooleanClaim("firewalled"));
 
-			Response response = httpClient.newCall(site.createRegisterRequest()).execute();
-			if (response.code() != 202)
+			try (Response response = httpClient.newCall(site.createRegisterRequest()).execute())
 			{
-				throw new IllegalStateException(
-						"Failed to complete the registration with " + site + "; " + response.code() + "[" + response.message() + "]");
+				if (response.code() != 202)
+				{
+					throw new IllegalStateException(
+							"Failed to complete the registration with " + site + "; " + response.code() + "[" + response.message() + "]");
+				}
 			}
 
 			sitesConfiguration.registerSite(site);

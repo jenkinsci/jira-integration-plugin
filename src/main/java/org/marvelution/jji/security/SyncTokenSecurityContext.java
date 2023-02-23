@@ -6,8 +6,9 @@ import org.marvelution.jji.configuration.*;
 
 import com.nimbusds.jwt.*;
 import hudson.security.*;
-import org.acegisecurity.*;
-import org.acegisecurity.context.*;
+import org.springframework.security.access.*;
+import org.springframework.security.core.*;
+import org.springframework.security.core.context.*;
 
 public class SyncTokenSecurityContext
 		implements SecurityContext
@@ -24,7 +25,7 @@ public class SyncTokenSecurityContext
 	{
 		this.claimsSet = claimsSet;
 		this.site = site;
-		authentication = ACL.SYSTEM;
+		authentication = ACL.SYSTEM2;
 	}
 
 	public static SyncTokenSecurityContext checkSyncTokenAuthentication(HttpServletRequest request)

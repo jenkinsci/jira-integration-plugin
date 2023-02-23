@@ -25,7 +25,7 @@
 		<artifactId>plugin</artifactId>
 		<version>4.55</version>
 	</parent>
-	<groupId>io.jenkins.plugins</groupId>
+	<groupId>org.marvelution.jji</groupId>
 	<artifactId>jira-integration</artifactId>
 	<version>${revision}-${changelist}</version>
 	<packaging>hpi</packaging>
@@ -52,27 +52,17 @@
 		<plugin.name>Jira Integration</plugin.name>
 		<plugin.description>Jenkins plugin for integrating with Jira Software Server, Data Center and Connect.</plugin.description>
 		<documentation.url>https://docs.marvelution.com/jji/</documentation.url>
-		<git.repo.slug>Marvelution/jira-integration-plugin</git.repo.slug>
+		<git.repo.slug>jenkinsci/jira-integration-plugin</git.repo.slug>
 
 		<revision>5.0.0</revision>
-		<changelist>999999-SNAPSHOT</changelist>
+		<changelist>SNAPSHOT</changelist>
 
-		<java.level>8</java.level>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<filterModified>true</filterModified>
 
 		<jenkins.integration.common.version>1.20</jenkins.integration.common.version>
 		<jenkins.baseline>2.361</jenkins.baseline>
 		<jenkins.version>${jenkins.baseline}.4</jenkins.version>
-		<jetty.version>9.4.5.v20170502</jetty.version>
-		<okhttp-api.version>4.9.3-105.vb96869f8ac3a</okhttp-api.version>
-		<job-dsl.version>1.50</job-dsl.version>
-		<casc.version>1.35</casc.version>
-		<jackson.version>2.12.1</jackson.version>
-		<jackson-databind.version>2.12.3</jackson-databind.version>
-		<okhttp.version>4.9.3</okhttp.version>
-		<mockito.version>4.3.1</mockito.version>
-		<assertj.version>3.11.1</assertj.version>
+		<job-dsl.version>1.81</job-dsl.version>
 	</properties>
 
 	<dependencyManagement>
@@ -95,12 +85,8 @@
 			<version>${jenkins.integration.common.version}</version>
 			<exclusions>
 				<exclusion>
-					<groupId>com.atlassian.connect</groupId>
-					<artifactId>atlassian-connect-spring-boot-jwt</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.inject</groupId>
-					<artifactId>javax.inject</artifactId>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -108,44 +94,27 @@
 			<groupId>org.marvelution.jji.components</groupId>
 			<artifactId>model-parsers</artifactId>
 			<version>${jenkins.integration.common.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${jackson-databind.version}</version>
 			<exclusions>
 				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-core</artifactId>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
 
 		<dependency>
-			<groupId>org.jenkins-ci.main</groupId>
-			<artifactId>jenkins-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>log4j-over-slf4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>jcl-over-slf4j</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>jackson2-api</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>io.jenkins.plugins</groupId>
 			<artifactId>okhttp-api</artifactId>
-			<version>${okhttp-api.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib-jdk8</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
@@ -162,33 +131,7 @@
 		<dependency>
 			<groupId>io.jenkins</groupId>
 			<artifactId>configuration-as-code</artifactId>
-			<version>${casc.version}</version>
 			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>${assertj.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.github.gmazzo</groupId>
-			<artifactId>okhttp-mock</artifactId>
-			<version>1.5.0</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jetbrains.kotlin</groupId>
-					<artifactId>kotlin-stdlib</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 

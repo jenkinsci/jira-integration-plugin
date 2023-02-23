@@ -1,4 +1,5 @@
 <?jelly escape-by-default='true'?>
 <div>
-	This plugin adds features to improve integration with <a target="_blank" href="https://www.atlassian.com/software/jira">Atlassian Jira</a>
+	The plugin provides a secure and reliable bi-directional way to collect build and deployment information from your Jenkins server in
+	your Jira Server, Data Center or Cloud site.
 </div>

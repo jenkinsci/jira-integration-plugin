@@ -1,0 +1,16 @@
+ul.legend {
+	list-style: none;
+	position: relative;
+	padding-left: 0;
+}
+ul.legend li {
+	display: inline-block;
+	padding: 5px;
+}
+ul.legend li img {
+	position: relative;
+	left: 0;
+}
+.error pre {
+	max-width: calc(80vw);
+}
