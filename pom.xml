@@ -59,7 +59,7 @@
 
 		<filterModified>true</filterModified>
 
-		<jenkins.integration.common.version>1.20</jenkins.integration.common.version>
+		<jenkins.integration.common.version>1.45</jenkins.integration.common.version>
 		<jenkins.baseline>2.361</jenkins.baseline>
 		<jenkins.version>${jenkins.baseline}.4</jenkins.version>
 		<job-dsl.version>1.81</job-dsl.version>
@@ -78,6 +78,7 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<!-- Source can be found here: https://bitbucket.org/marvelution/jira-jenkins-integration-common/ -->
 		<dependency>
 			<groupId>org.marvelution.jji.components</groupId>
 			<artifactId>sync-token</artifactId>
