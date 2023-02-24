@@ -8,7 +8,7 @@
 		<artifactId>plugin</artifactId>
 		<version>4.55</version>
 	</parent>
-	<groupId>org.marvelution.jji</groupId>
+	<groupId>io.jenkins.plugins</groupId>
 	<artifactId>jira-integration</artifactId>
 	<version>${revision}-${changelist}</version>
 	<packaging>hpi</packaging>
