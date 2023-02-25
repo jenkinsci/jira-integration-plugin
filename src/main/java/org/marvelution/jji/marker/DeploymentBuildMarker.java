@@ -1,7 +1,6 @@
 package org.marvelution.jji.marker;
 
 import java.io.*;
-import java.lang.*;
 import java.lang.SuppressWarnings;
 import java.nio.charset.*;
 import java.util.*;
@@ -145,7 +144,7 @@ public class DeploymentBuildMarker
 			return req.bindJSON(DeploymentBuildMarker.class, formData);
 		}
 
-		@SuppressWarnings("lgtm[jenkins/csrf]")
+		@SuppressWarnings({ "lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]" })
 		public FormValidation doCheckEnvironmentId(@QueryParameter String value)
 		{
 			if (isNotBlank(value) && length(value.trim()) > ID_MAX_LENGTH)
@@ -162,7 +161,7 @@ public class DeploymentBuildMarker
 			}
 		}
 
-		@SuppressWarnings("lgtm[jenkins/csrf]")
+		@SuppressWarnings({ "lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]" })
 		public FormValidation doCheckEnvironmentName(@QueryParameter String value)
 		{
 			if (isBlank(value))
@@ -179,7 +178,7 @@ public class DeploymentBuildMarker
 			}
 		}
 
-		@SuppressWarnings("lgtm[jenkins/csrf]")
+		@SuppressWarnings({ "lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]" })
 		public ListBoxModel doFillEnvironmentTypeItems()
 		{
 			ListBoxModel items = new ListBoxModel();
