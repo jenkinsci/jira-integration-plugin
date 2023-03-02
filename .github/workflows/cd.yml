@@ -1,9 +1,9 @@
 # Note: additional setup is required, see https://www.jenkins.io/redirect/continuous-delivery-of-plugins
 
 name: cd
+on:
+  workflow_dispatch:
 # Only opt for explicit deployments of the plugin
-#on:
-#  workflow_dispatch:
 #  check_run:
 #    types:
 #    - completed

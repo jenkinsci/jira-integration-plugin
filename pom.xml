@@ -34,11 +34,11 @@
 	<properties>
 		<plugin.name>Jira Integration</plugin.name>
 		<plugin.description>Jenkins plugin for integrating with Jira Software Server, Data Center and Connect.</plugin.description>
-		<documentation.url>https://docs.marvelution.com/jji/</documentation.url>
+		<documentation.url>https://github.com/${git.repo.slug}</documentation.url>
 		<git.repo.slug>jenkinsci/jira-integration-plugin</git.repo.slug>
 
 		<revision>5.0.0</revision>
-		<changelist>SNAPSHOT</changelist>
+		<changelist>999999-SNAPSHOT</changelist>
 
 		<filterModified>true</filterModified>
 
@@ -87,10 +87,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>jackson2-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.jenkins.plugins</groupId>
 			<artifactId>okhttp-api</artifactId>
 			<exclusions>
@@ -99,6 +95,15 @@
 					<artifactId>kotlin-stdlib-jdk8</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.jenkins</groupId>
+			<artifactId>configuration-as-code</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>jackson2-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
@@ -111,11 +116,12 @@
 			<artifactId>job-dsl-core</artifactId>
 			<version>${job-dsl.version}</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.jenkins</groupId>
-			<artifactId>configuration-as-code</artifactId>
-			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>xstream</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 
