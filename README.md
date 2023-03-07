@@ -2,12 +2,14 @@
 
 This plugin integrates Jenkins with [Jira](https://www.atlassian.com/jira) on Server, Data Center and Cloud deployments.
 
-The integration offers support for public (non-firewalled) and private (behind a firewall) Jenkins servers. In this case public means 
-the Jira app can access Jenkins. It does not need to be public to the entire human race.
+The integration offers support:
+*   A **Private** Jenkins site, meaning the Jenkins instance is not accessible by the Jira app. Either because of a firewall or other 
+    network limitations.
+*   A **Public** Jenkins site, meaning the Jenkins instance is accessible by the Jira app for data synchronization.
 
-> :warning: This plugin does need the Jenkins Integration for Jira app to be installed in for Jira instance which is not a free app. 
-> Go to **Apps > Manage Apps** in Jira, search for "Jenkins Integration for Jira" and install the app. After the app is installed it 
-> will help you integrate your Jenkins server with Jira.
+> :warning: This plugin does need the [Jenkins Integration for Jira](https://marketplace.atlassian.com/apps/1211376/jenkins-integration-for-jira?tab=overview&hosting=cloud) 
+> app to be installed in for Jira instance which is not a free app. Go to **Apps > Manage Apps** in Jira, search for "Jenkins 
+> Integration for Jira" and install the app. After the app is installed it will help you integrate your Jenkins server with Jira.
      
 ## Prerequisites
 

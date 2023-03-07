@@ -33,7 +33,7 @@
 
 	<properties>
 		<plugin.name>Jira Integration</plugin.name>
-		<plugin.description>Jenkins plugin for integrating with Jira Software Server, Data Center and Connect.</plugin.description>
+		<plugin.description>Jenkins plugin for integrating with Jira Server, Data Center and Connect.</plugin.description>
 		<documentation.url>https://github.com/${git.repo.slug}</documentation.url>
 		<git.repo.slug>jenkinsci/jira-integration-plugin</git.repo.slug>
 
