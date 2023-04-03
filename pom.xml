@@ -37,7 +37,7 @@
 		<documentation.url>https://github.com/${git.repo.slug}</documentation.url>
 		<git.repo.slug>jenkinsci/jira-integration-plugin</git.repo.slug>
 
-		<revision>5.0.0</revision>
+		<revision>5.1.0</revision>
 		<changelist>999999-SNAPSHOT</changelist>
 
 		<filterModified>true</filterModified>
@@ -104,6 +104,14 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>jackson2-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>credentials</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>plain-credentials</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
