@@ -21,7 +21,7 @@ public class HttpClientProvider
 				.writeTimeout(Duration.ofMillis(5000))
 				.addInterceptor(chain -> {
 					Request originalRequest = chain.request();
-					Request userAgentRequest = originalRequest.newBuilder().header("User-Agent", JiraPlugin.SHORT_NAME).build();
+					Request userAgentRequest = originalRequest.newBuilder().header("User-Agent", JiraIntegrationPlugin.SHORT_NAME).build();
 					return chain.proceed(userAgentRequest);
 				})
 				.build();

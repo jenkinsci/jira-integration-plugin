@@ -2,7 +2,7 @@ package org.marvelution.jji.trigger;
 
 import hudson.model.*;
 
-import static org.marvelution.jji.JiraPlugin.*;
+import static org.marvelution.jji.JiraIntegrationPlugin.*;
 
 @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class JiraIssueAction
