@@ -54,7 +54,7 @@ public class JiraSiteManagement
 	@Override
 	public String getIconFileName()
 	{
-		return "/plugin/" + JiraPlugin.SHORT_NAME + "/images/48x48/jji.png";
+		return "/plugin/" + JiraIntegrationPlugin.SHORT_NAME + "/images/48x48/jji.png";
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class JiraSiteManagement
 
 	public String getBaseHelpUrl()
 	{
-		return "/plugin/" + JiraPlugin.SHORT_NAME + "/help/";
+		return "/plugin/" + JiraIntegrationPlugin.SHORT_NAME + "/help/";
 	}
 
 	@RequirePOST

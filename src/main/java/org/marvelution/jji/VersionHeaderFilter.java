@@ -11,7 +11,7 @@ import hudson.init.*;
 import hudson.util.*;
 import jenkins.model.*;
 
-import static org.marvelution.jji.JiraPlugin.*;
+import static org.marvelution.jji.JiraIntegrationPlugin.*;
 
 public class VersionHeaderFilter
 		implements Filter
