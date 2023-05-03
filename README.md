@@ -77,6 +77,7 @@ Pros
 - Integration is App based, no need for a user account to integrate.
 - Supports Jira Server, Data Center and Cloud.
 - Supports all Jenkins job types.
+- Supports limiting the integration to selected projects.
 - The app builds an issue-to-build index available in multiple panels when viewing an issue in Jira
 - App provides a rules engine for to take action in Jira based on job and build data from Jenkins where the rules are configured by 
   selecting jobs and builds instead on copying identifiers.
