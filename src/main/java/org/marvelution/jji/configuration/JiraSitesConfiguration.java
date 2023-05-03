@@ -10,6 +10,8 @@ import javax.annotation.*;
 
 import com.cloudbees.plugins.credentials.*;
 import hudson.*;
+import hudson.init.*;
+import hudson.model.listeners.*;
 import hudson.security.*;
 import hudson.util.*;
 import jenkins.model.*;
@@ -182,10 +184,9 @@ public class JiraSitesConfiguration
 		return ID;
 	}
 
-	@Override
-	public synchronized void load()
+	@Initializer(after = InitMilestone.SYSTEM_CONFIG_ADAPTED)
+	public void migrateSharedSecretsToCredentials()
 	{
-		super.load();
 		boolean updated = false;
 		for (JiraSite site : sites)
 		{
@@ -197,7 +198,11 @@ public class JiraSitesConfiguration
 		}
 		if (updated)
 		{
-			save();
+			try {
+				getConfigFile().write(this);
+			} catch (IOException e) {
+				LOGGER.log(Level.WARNING, "Failed to save " + getConfigFile(), e);
+			}
 		}
 	}
 
