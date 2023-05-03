@@ -1,0 +1,16 @@
+unclassified:
+  jira-integration-configuration:
+    sites:
+      - identifier: "97b100155db44e809096553ec4fe6a4d"
+        name: "JIRA"
+        sharedSecret: "5FUadLmfDoJ04H1kqct72s4WMo3JB6nuOFuTTEFG2AjN-7sAQ2Q5=hz3cQNAhVkVdi=9uJ5eVvZvgXek993SB6TuUnCOL0M8"
+        uri: "http://localhost:2990/jira/rest/jenkins/latest"
+        postJson: true
+      - identifier: "339b3e9a2f184752a978a5ef9c17472e"
+        name: "marveloud.atlassian.net"
+        sharedSecret: "3hyuByFQ0Mt/k/T+DNu=2Dbi6nkjmuz9uAmtWJbGBObgoMniLUCqGzuy7JA7IFt8BMjNSZki05YiwWU6cFEmJG99KpZ614R0"
+        uri: "https://jjc.marvelution.com/rest/339b3e9a-2f18-4752-a978-a5ef9c17472e"
+      - identifier: "b37cee05e19343d780bc2bae9ef5f171"
+        name: "marveling.atlassian.net"
+        sharedSecret: "FfcsaaeRI9o3AbV86P-x6Zn0gYgAe0L66XaB58KecDc-4A3OMW+oh9LO/XZI93cEd8en/6qo1bqacHwp7riJg=43Gra7s7kp"
+        uri: "https://jjc-staging.marvelution.com/rest/b37cee05-e193-43d7-80bc-2bae9ef5f171"

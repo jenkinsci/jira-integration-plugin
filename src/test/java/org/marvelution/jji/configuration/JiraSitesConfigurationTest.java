@@ -24,7 +24,8 @@ public class JiraSitesConfigurationTest
     public void testStoreSharedSecretAsCredentials()
             throws IOException
     {
-        URL resource = getClass().getResource(getClass().getSimpleName() + "/testStoreSharedSecretAsCredentials/" + ID + ".xml");
+        URL resource = getClass().getResource(getClass().getSimpleName() + "/" + jenkins.getTestDescription()
+                                                                                        .getMethodName() + "/" + ID + ".xml");
         XmlFile xmlFile = new XmlFile(new File(resource.getFile()));
         JiraSitesConfiguration originalConfig = (JiraSitesConfiguration) xmlFile.read();
         Tuple[] tuples = originalConfig.getSites()
@@ -32,7 +33,8 @@ public class JiraSitesConfigurationTest
                                        .map(site -> tuple(site.getName(), site.getSharedSecret()))
                                        .toArray(Tuple[]::new);
 
-        JiraSitesConfiguration config = (JiraSitesConfiguration) jenkins.jenkins.getDescriptorOrDie(JiraSitesConfiguration.class);
+        JiraSitesConfiguration config = (JiraSitesConfiguration) jenkins.getInstance()
+                                                                        .getDescriptorOrDie(JiraSitesConfiguration.class);
 
         assertThat(config.getSites()).hasSize(2)
                                      .allSatisfy(site -> {
