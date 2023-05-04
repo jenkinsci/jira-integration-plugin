@@ -61,7 +61,7 @@ public class SitesClient
 			}
 			catch (IOException e)
 			{
-				LOGGER.log(Level.SEVERE, String.format("Failed to get issue links from Jira Site: {0}; {1}", site, e.getMessage()), e);
+				LOGGER.log(Level.SEVERE, String.format("Failed to get issue links from Jira Site: %s; %s", site, e.getMessage()), e);
 			}
 		});
 		return issueLinks;

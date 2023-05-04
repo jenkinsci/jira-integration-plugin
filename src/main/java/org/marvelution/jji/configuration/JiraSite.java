@@ -245,7 +245,7 @@ public class JiraSite
 		                  List.of(new SchemeSpecification(uri.getScheme()), new HostnameSpecification(uri.getHost(), null)));
 	}
 
-	Optional<StringCredentials> getSharedSecretCredentials()
+	public Optional<StringCredentials> getSharedSecretCredentials()
 	{
 		List<StringCredentials> credentials = CredentialsProvider.lookupCredentials(StringCredentials.class, Jenkins.get(), ACL.SYSTEM,
 		                                                                            List.of(new SchemeRequirement(getUri().getScheme()),
