@@ -22,6 +22,7 @@ import org.acegisecurity.*;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.bind.*;
 import org.kohsuke.stapler.interceptor.*;
+import org.springframework.security.access.AccessDeniedException;
 
 import static org.marvelution.jji.JiraUtils.*;
 import static org.marvelution.jji.Messages.*;

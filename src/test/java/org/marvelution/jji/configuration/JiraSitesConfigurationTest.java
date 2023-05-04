@@ -21,7 +21,7 @@ public class JiraSitesConfigurationTest
 
     @Test
     @LocalData
-    public void testStoreSharedSecretAsCredentials()
+    public void testMigrateSharedSecretAsCredentials()
             throws IOException
     {
         URL resource = getClass().getResource(getClass().getSimpleName() + "/" + jenkins.getTestDescription()
