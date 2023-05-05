@@ -4,7 +4,6 @@ import javax.servlet.Filter;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
-import java.util.*;
 import java.util.logging.*;
 
 import org.marvelution.jji.configuration.*;
@@ -37,10 +36,7 @@ public class SyncTokenAuthenticationFilter
     public SyncTokenAuthenticationFilter(JiraSitesConfiguration sitesConfiguration)
     {
         this.sitesConfiguration = sitesConfiguration;
-        tokenAuthenticator = new SyncTokenAuthenticator(issuer -> this.sitesConfiguration.stream()
-                                                                                         .filter(site -> Objects.equals(issuer,
-                                                                                                 site.getIdentifier()))
-                                                                                         .findFirst()
+        tokenAuthenticator = new SyncTokenAuthenticator(issuer -> this.sitesConfiguration.findSite(issuer)
                                                                                          .map(site -> site.getSharedSecretCredentials()
                                                                                                           .map(StringCredentials::getSecret)
                                                                                                           .map(Secret::getPlainText)
@@ -94,9 +90,7 @@ public class SyncTokenAuthenticationFilter
         {
             JWTClaimsSet claimsSet = tokenAuthenticator.authenticate((HttpServletRequest) request);
             LOGGER.log(Level.FINE, "Authenticated {0} through Sync Token.", claimsSet.getIssuer());
-            JiraSite site = sitesConfiguration.stream()
-                                              .filter(s -> Objects.equals(s.getIdentifier(), claimsSet.getIssuer()))
-                                              .findFirst()
+            JiraSite site = sitesConfiguration.findSite(claimsSet.getIssuer())
                                               .orElseThrow(() -> new IllegalStateException(
                                                       "Authenticated by sync-token but unable to find a Jira site for it."));
 

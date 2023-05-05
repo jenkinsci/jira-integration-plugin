@@ -148,10 +148,7 @@ public class AbstractListenerTest
                                                    .asInstanceOf(InstanceOfAssertFactories.iterable(String.class))
                                                    .contains(SYNC_TOKEN_HEADER_NAME);
                                 String token = request.getHeader(SYNC_TOKEN_HEADER_NAME);
-                                new SyncTokenAuthenticator(issuer -> getJiraSitesConfiguration().stream()
-                                                                                                .filter(site -> site.getIdentifier()
-                                                                                                                    .equals(issuer))
-                                                                                                .findFirst()
+                                new SyncTokenAuthenticator(issuer -> getJiraSitesConfiguration().findSite(issuer)
                                                                                                 .flatMap(JiraSite::getSharedSecretCredentials)
                                                                                                 .map(StringCredentials::getSecret)
                                                                                                 .map(Secret::getPlainText)).authenticate(

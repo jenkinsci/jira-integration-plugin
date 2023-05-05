@@ -10,7 +10,6 @@ import org.marvelution.jji.synctoken.utils.*;
 
 import okhttp3.*;
 import org.junit.*;
-import org.jvnet.hudson.test.*;
 
 import static jenkins.model.Jenkins.*;
 import static org.assertj.core.api.Assertions.*;
@@ -18,22 +17,11 @@ import static org.assertj.core.api.Assertions.*;
 public class JiraSiteManagementTest
         extends AbstractTechnicalTest
 {
-    private static final String ALICE = "alice";
-    private final MockAuthorizationStrategy authorizationStrategy = new MockAuthorizationStrategy();
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-    private JiraSitesConfiguration sitesConfiguration;
     private JiraSite jiraSite;
 
     @Before
     public void setUp()
     {
-        jenkins.getInstance()
-               .setSecurityRealm(jenkins.createDummySecurityRealm());
-        jenkins.getInstance()
-               .setAuthorizationStrategy(authorizationStrategy);
-        sitesConfiguration = jenkins.getInstance()
-                                    .getDescriptorByType(JiraSitesConfiguration.class);
         jiraSite = new JiraSite(URI.create("http://localhost:2990/jira/rest/jenkins/latest")).withName("Local Jira")
                                                                                              .withIdentifier("identifier")
                                                                                              .withSharedSecret(SharedSecretGenerator.generate());
@@ -148,14 +136,6 @@ public class JiraSiteManagementTest
                                                      .containsOnly(site);
         }
 
-    }
-
-    private void injectSite(JiraSite site)
-    {
-        sitesConfiguration.registerSite(new JiraSite(site.getUri()).withIdentifier(site.getIdentifier())
-                                                                   .withName(site.getName())
-                                                                   .withSharedSecret(site.getSharedSecret())
-                                                                   .withPostJson(site.isPostJson()));
     }
 
     private Response registerJiraSite(

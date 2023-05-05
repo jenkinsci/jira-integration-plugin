@@ -9,19 +9,40 @@ import org.marvelution.jji.synctoken.*;
 import com.fasterxml.jackson.databind.*;
 import okhttp3.*;
 import org.junit.*;
+import org.jvnet.hudson.test.*;
 
 import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.*;
 
-public class AbstractTechnicalTest
+public abstract class AbstractTechnicalTest
 {
+
+    public static final String ALICE = "alice";
+    protected final MockAuthorizationStrategy authorizationStrategy = new MockAuthorizationStrategy();
+    @Rule
+    public JenkinsRule jenkins = new JenkinsRule();
+    protected JiraSitesConfiguration sitesConfiguration;
     protected OkHttpClient httpClient;
     protected ObjectMapper objectMapper;
 
     @Before
-    public void setUpHttpClientAndObjectMapper()
+    public void setUpCommonBits()
     {
+        jenkins.getInstance()
+               .setSecurityRealm(jenkins.createDummySecurityRealm());
+        jenkins.getInstance()
+               .setAuthorizationStrategy(authorizationStrategy);
+        sitesConfiguration = jenkins.getInstance()
+                                    .getDescriptorByType(JiraSitesConfiguration.class);
         httpClient = new HttpClientProvider().httpClient();
         objectMapper = new ObjectMapperProvider().objectMapper();
+    }
+
+    protected void injectSite(JiraSite site)
+    {
+        sitesConfiguration.registerSite(new JiraSite(site.getUri()).withIdentifier(site.getIdentifier())
+                                                                   .withName(site.getName())
+                                                                   .withSharedSecret(site.getSharedSecret())
+                                                                   .withPostJson(site.isPostJson()));
     }
 
     protected Request signTokenAuth(
