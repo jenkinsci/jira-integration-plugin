@@ -16,7 +16,7 @@ import okhttp3.*;
 public class SitesClient
 {
 
-	public static final TypeReference<Map<String, String>> LINKS_TYPE = new TypeReference<Map<String, String>>() {};
+	public static final TypeReference<Map<String, String>> LINKS_TYPE = new TypeReference<>() {};
 	public static final String SYNC_RESULT_HEADER = "X-Sync-Result-Id";
 	private static final Logger LOGGER = Logger.getLogger(SitesClient.class.getName());
 	private final JiraSitesConfiguration sitesConfiguration;
@@ -61,7 +61,7 @@ public class SitesClient
 			}
 			catch (IOException e)
 			{
-				LOGGER.log(Level.SEVERE, String.format("Failed to get issue links from Jira Site: {0}; {1}", site, e.getMessage()), e);
+				LOGGER.log(Level.SEVERE, String.format("Failed to get issue links from Jira Site: %s; %s", site, e.getMessage()), e);
 			}
 		});
 		return issueLinks;

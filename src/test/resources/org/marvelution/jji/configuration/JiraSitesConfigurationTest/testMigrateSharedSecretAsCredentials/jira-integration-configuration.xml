@@ -1,0 +1,19 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<org.marvelution.jji.configuration.JiraSitesConfiguration plugin="jira-integration@5.1.0-999999-SNAPSHOT">
+  <sites class="java.util.concurrent.CopyOnWriteArraySet">
+    <org.marvelution.jji.configuration.JiraSite>
+      <uri>https://jjc.marvelution.com/rest/7d554534-061a-3af6-9a35-db5750d39983</uri>
+      <identifier>52f28f76aeed495c90c975a6eac189fc</identifier>
+      <sharedSecret>dUXTo-D5uNUd1lBKRj2RhEtEBN7Utvfh4VWCg9jKEQ6BHa1UNPDebppOLLGHEIK9aOBAJtgpWoMEnPQf=BeLH1zZcGKzSlCG</sharedSecret>
+      <name>marveling.atlassian.net</name>
+      <postJson>false</postJson>
+    </org.marvelution.jji.configuration.JiraSite>
+    <org.marvelution.jji.configuration.JiraSite>
+      <uri>http://localhost:2990/jira/rest/jenkins/latest</uri>
+      <identifier>f371e6c7acf440e3970af4ffd1e01d27</identifier>
+      <sharedSecret>aAw=ULb+etJp1U6P6oDucsO=DwyUwEQpF8DG/I13ocrkM7/=UUegMh185k474Z6IbqQrcAJwE61Ek6AgQ27JPCUCdUOJj7yT</sharedSecret>
+      <name>JIRA</name>
+      <postJson>false</postJson>
+    </org.marvelution.jji.configuration.JiraSite>
+  </sites>
+</org.marvelution.jji.configuration.JiraSitesConfiguration>
