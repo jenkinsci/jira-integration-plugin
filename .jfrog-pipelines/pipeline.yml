@@ -1,0 +1,88 @@
+template: true
+valuesFilePath: ./values.yml
+
+resources:
+- name: {{.Values.pipeline.name}}_PluginGitRepo
+  type: GitRepo
+  configuration:
+    gitProvider: {{.Values.plugin.gitProvider}}
+    path: {{.Values.plugin.path}}
+    tags:
+      include: ^.*$
+    buildOn:
+      commit: false
+      tagCreate: false
+      releaseCreate: true
+- name: {{.Values.pipeline.name}}_CommonGitRepo
+  type: GitRepo
+  configuration:
+    gitProvider: {{.Values.common.gitProvider}}
+    path: {{.Values.common.path}}
+    branches:
+      include: master
+    buildOn:
+      commit: true
+- name: {{.Values.pipeline.name}}_Functions
+  type: Marvelution/Functions
+  configuration:
+    functions: all
+- name: {{.Values.pipeline.name}}_JiraVersion
+  type: Marvelution/JiraVersion
+  configuration:
+    jira: {{.Values.versioning.jira}}
+    projectKey: {{.Values.versioning.project}}
+    version: 'tbd'
+    versionPrefix: 'jenkins-'
+    optional: true
+
+pipelines:
+- name: {{.Values.pipeline.name}}_Release
+  configuration:
+    jfrogCliVersion: 2
+    environmentVariables:
+      readOnly:
+        JFROG_CLI_PLUGINS_SERVER: {{.Values.artifactory}}
+        JFROG_CLI_BUILD_NUMBER: ${run_id}
+    runtime:
+      type: image
+      image:
+        auto:
+          language: go
+          versions:
+          - "1.19"
+  steps:
+  - name: publish
+    type: Bash
+    configuration:
+      integrations:
+      - name: {{.Values.artifactory}}
+      - name: {{.Values.common.sshKey}}
+      inputResources:
+      - name: {{.Values.pipeline.name}}_PluginGitRepo
+      - name: {{.Values.pipeline.name}}_CommonGitRepo
+        trigger: false
+      - name: {{.Values.pipeline.name}}_Functions
+      outputResources:
+      - name: {{.Values.pipeline.name}}_JiraVersion
+    execution:
+      onExecute:
+      - export pluginResourcePath=$(find_resource_variable "{{.Values.pipeline.name}}_PluginGitRepo" resourcePath)
+      - source "${pluginResourcePath}/.jfrog-pipelines/functions.sh"
+
+      - export releaseName=$(find_resource_variable "{{.Values.pipeline.name}}_PluginGitRepo" releaseName)
+      - export version=$(echo "$releaseName" | cut -d '-' -f 1)
+
+      - git_set_remote "{{.Values.pipeline.name}}_CommonGitRepo" "true"
+      - pushd $(find_resource_variable "{{.Values.pipeline.name}}_CommonGitRepo" resourcePath)
+
+      - git checkout -b new_jenkins_release
+
+      - generate_release_notes "{{.Values.pipeline.name}}_PluginGitRepo" "$version" "$releaseName"
+
+      - git commit -a -m "Added release notes for ${releaseName} [skipRun]"
+      - git_push
+      - create_pull_request "{{.Values.pipeline.name}}_CommonGitRepo" new_jenkins_release
+
+      - popd
+
+      - write_output {{.Values.pipeline.name}}_JiraVersion "version=${version}"

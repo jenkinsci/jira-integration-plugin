@@ -1,0 +1,14 @@
+pipeline:
+  name: JiraIntegrationPlugin
+plugin:
+  gitProvider: Github
+  path: jenkinsci/jira-integration-plugin
+common:
+  gitProvider: Bitbucket
+  path: marvelution/jira-jenkins-integration-common
+  sshKey: CaveKey
+artifactory: Artifactory
+jira: Jira
+versioning:
+  jira: Jira
+  project: JJI
