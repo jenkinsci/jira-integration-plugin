@@ -29,7 +29,7 @@ public class JiraBuildTriggerAction<JobT extends Job<JobT, ?> & Queue.Task>
 	private static final Logger LOGGER = Logger.getLogger(JiraBuildTriggerAction.class.getName());
 	private final JobT target;
 
-	JiraBuildTriggerAction(JobT target)
+	public JiraBuildTriggerAction(JobT target)
 	{
 		this.target = target;
 	}

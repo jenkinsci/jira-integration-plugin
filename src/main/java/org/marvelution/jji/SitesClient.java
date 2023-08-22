@@ -1,18 +1,20 @@
 package org.marvelution.jji;
 
+import javax.inject.*;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.logging.*;
-import javax.inject.*;
 
 import org.marvelution.jji.configuration.*;
 
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
 import hudson.model.*;
+import hudson.util.*;
 import okhttp3.*;
 
+@SuppressWarnings("resource")
 public class SitesClient
 {
 
@@ -38,8 +40,16 @@ public class SitesClient
 			String jobHash,
 			int buildNumber)
 	{
+		return getIssueLinks(site -> true, jobHash, buildNumber);
+	}
+
+	public Map<String, String> getIssueLinks(
+			Predicate<JiraSite> siteFilter,
+			String jobHash,
+			int buildNumber)
+	{
 		Map<String, String> issueLinks = new HashMap<>();
-		doWithSites(site -> {
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createGetIssueLinksRequest(jobHash, buildNumber)).execute())
 			{
 				if (response.isSuccessful() && response.body() != null)
@@ -67,11 +77,33 @@ public class SitesClient
 		return issueLinks;
 	}
 
+	public void syncBuild(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run)
+	{
+		notifyBuildCompleted(siteFilter, run, new LogTaskListener(LOGGER, Level.INFO));
+	}
+
+	public void syncJob(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		notifyJobModified(siteFilter, item);
+	}
+
 	public void notifyBuildCompleted(
-			Run run,
+			Run<?, ?> run,
 			TaskListener listener)
 	{
-		doWithSites(site -> {
+		notifyBuildCompleted(site -> true, run, listener);
+	}
+
+	public void notifyBuildCompleted(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run,
+			TaskListener listener)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyBuildCompleted(run)).execute())
 			{
 				String syncRequestId = response.header(SYNC_RESULT_HEADER);
@@ -93,7 +125,14 @@ public class SitesClient
 
 	public void notifyJobCreated(Item item)
 	{
-		doWithSites(site -> {
+		notifyJobCreated(site -> true, item);
+	}
+
+	public void notifyJobCreated(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobCreatedRequest(item)).execute())
 			{
 				if (response.isSuccessful())
@@ -117,7 +156,14 @@ public class SitesClient
 
 	public void notifyJobModified(Item item)
 	{
-		doWithSites(site -> {
+		notifyJobModified(site -> true, item);
+	}
+
+	public void notifyJobModified(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobModifiedRequest(item)).execute())
 			{
 				if (response.isSuccessful())
@@ -143,7 +189,15 @@ public class SitesClient
 			String oldJobHash,
 			Item newItem)
 	{
-		doWithSites(site -> {
+		notifyJobMoved(site -> true, oldJobHash, newItem);
+	}
+
+	public void notifyJobMoved(
+			Predicate<JiraSite> siteFilter,
+			String oldJobHash,
+			Item newItem)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobMovedRequest(oldJobHash, newItem)).execute())
 			{
 				if (response.isSuccessful())
@@ -167,19 +221,34 @@ public class SitesClient
 
 	public void notifyJobDeleted(Item item)
 	{
-		notifyDeletion(site -> site.createNotifyJobDeletedRequest(item), item::getFullDisplayName);
+		notifyJobDeleted(site -> true, item);
 	}
 
-	public void notifyBuildDeleted(Run run)
+	public void notifyJobDeleted(
+			Predicate<JiraSite> siteFilter,
+			Item item)
 	{
-		notifyDeletion(site -> site.createNotifyBuildDeletedRequest(run), run::getFullDisplayName);
+		notifyDeletion(siteFilter, site -> site.createNotifyJobDeletedRequest(item), item::getFullDisplayName);
+	}
+
+	public void notifyBuildDeleted(Run<?, ?> run)
+	{
+		notifyBuildDeleted(site -> true, run);
+	}
+
+	public void notifyBuildDeleted(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run)
+	{
+		notifyDeletion(siteFilter, site -> site.createNotifyBuildDeletedRequest(run), run::getFullDisplayName);
 	}
 
 	private void notifyDeletion(
+			Predicate<JiraSite> siteFilter,
 			Function<JiraSite, Request> request,
 			Supplier<String> nameSupplier)
 	{
-		doWithSites(site -> {
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(request.apply(site)).execute())
 			{
 				if (response.isSuccessful())
@@ -198,11 +267,6 @@ public class SitesClient
 				           new Object[] { nameSupplier.get(), site, e.getMessage() });
 			}
 		});
-	}
-
-	private void doWithSites(Consumer<JiraSite> action)
-	{
-		doWithSites(site -> true, action);
 	}
 
 	private void doWithSites(

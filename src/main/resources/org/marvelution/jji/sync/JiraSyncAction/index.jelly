@@ -1,0 +1,30 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <l:layout permission="${app.ADMINISTER}" title="${it.target.fullDisplayName}">
+        <st:include it="${it.target}" page="sidepanel.jelly" />
+        <l:main-panel>
+            <j:if test="${!empty(error)}">
+                <f:block>
+                    <div class="alert alert-danger">
+                        <p>${error}</p>
+                    </div>
+                </f:block>
+            </j:if>
+            <j:if test="${!empty(warning)}">
+                <f:block>
+                    <div class="alert alert-warning">
+                        <p>${warning}</p>
+                    </div>
+                </f:block>
+            </j:if>
+            <j:if test="${!empty(info)}">
+                <f:block>
+                    <div class="alert alert-info">
+                        <p>${info}</p>
+                    </div>
+                </f:block>
+            </j:if>
+            Content here
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
