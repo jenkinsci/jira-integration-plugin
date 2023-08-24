@@ -1,16 +1,20 @@
 package org.marvelution.jji;
 
+import javax.inject.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
-import javax.inject.*;
 
 import org.marvelution.jji.configuration.*;
 
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
 import hudson.model.*;
+import hudson.security.*;
+import hudson.util.*;
+import jenkins.security.*;
 import okhttp3.*;
 
 public class SitesClient
@@ -19,6 +23,10 @@ public class SitesClient
 	public static final TypeReference<Map<String, String>> LINKS_TYPE = new TypeReference<>() {};
 	public static final String SYNC_RESULT_HEADER = "X-Sync-Result-Id";
 	private static final Logger LOGGER = Logger.getLogger(SitesClient.class.getName());
+	private static final Predicate<JiraSite> DEFAULT_SITE_FILTER = site -> true;
+	private final ExecutorService executor =
+			new ImpersonatingExecutorService(Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),
+					"JiraSync"))), ACL.SYSTEM2);
 	private final JiraSitesConfiguration sitesConfiguration;
 	private final OkHttpClient httpClient;
 	private final ObjectMapper objectMapper;
@@ -34,12 +42,50 @@ public class SitesClient
 		this.objectMapper = objectMapper;
 	}
 
+	public Set<JiraSite> getSites()
+	{
+		return sitesConfiguration.getSites();
+	}
+
+	public void syncBuild(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run)
+	{
+		executor.execute(() -> notifyBuildCompleted(siteFilter, run, null));
+	}
+
+	@SuppressWarnings("unchecked")
+	public void syncJob(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		executor.execute(() -> {
+			for (Job<? extends Job<?, ?>, ? extends Run<?, ?>> job : item.getAllJobs())
+			{
+				notifyJobModified(siteFilter, item);
+				for (Run<?, ?> build : job.getBuilds()
+						.completedOnly())
+				{
+					syncBuild(siteFilter, build);
+				}
+			}
+		});
+	}
+
 	public Map<String, String> getIssueLinks(
 			String jobHash,
 			int buildNumber)
 	{
+		return getIssueLinks(DEFAULT_SITE_FILTER, jobHash, buildNumber);
+	}
+
+	public Map<String, String> getIssueLinks(
+			Predicate<JiraSite> siteFilter,
+			String jobHash,
+			int buildNumber)
+	{
 		Map<String, String> issueLinks = new HashMap<>();
-		doWithSites(site -> {
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createGetIssueLinksRequest(jobHash, buildNumber)).execute())
 			{
 				if (response.isSuccessful() && response.body() != null)
@@ -68,37 +114,54 @@ public class SitesClient
 	}
 
 	public void notifyBuildCompleted(
-			Run run,
+			Run<?, ?> run,
 			TaskListener listener)
 	{
-		doWithSites(site -> {
+		notifyBuildCompleted(DEFAULT_SITE_FILTER, run, listener);
+	}
+
+	public void notifyBuildCompleted(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run,
+			TaskListener listener)
+	{
+		BuildLogger logger = new BuildLogger(listener);
+
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyBuildCompleted(run)).execute())
 			{
 				String syncRequestId = response.header(SYNC_RESULT_HEADER);
 				if (response.isSuccessful())
 				{
-					listener.getLogger().printf("Notified %s that a build has completed (%s).%n", site.getName(), syncRequestId);
+					logger.info("Notified %s that a build has completed (%s).%n", site.getName(), syncRequestId);
 				}
 				else
 				{
-					listener.error("Unable to notify %s: [%d] %s", site.getName(), response.code(), response.message());
+					logger.error("Unable to notify %s: [%d] %s", site.getName(), response.code(), response.message());
 				}
 			}
 			catch (Exception e)
 			{
-				listener.error("Failed to notify %s on this builds completion -> %s", site, e.getMessage());
+				logger.error("Failed to notify %s on this builds completion -> %s", site, e.getMessage());
 			}
 		});
 	}
 
 	public void notifyJobCreated(Item item)
 	{
-		doWithSites(site -> {
+		notifyJobCreated(DEFAULT_SITE_FILTER, item);
+	}
+
+	public void notifyJobCreated(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobCreatedRequest(item)).execute())
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was created.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was created.",
 					           new Object[] { site.getName(), item.getFullDisplayName() });
 				}
 				else
@@ -117,12 +180,19 @@ public class SitesClient
 
 	public void notifyJobModified(Item item)
 	{
-		doWithSites(site -> {
+		notifyJobModified(DEFAULT_SITE_FILTER, item);
+	}
+
+	public void notifyJobModified(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobModifiedRequest(item)).execute())
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was modified.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was modified.",
 					           new Object[] { site.getName(), item.getFullDisplayName() });
 				}
 				else
@@ -143,12 +213,20 @@ public class SitesClient
 			String oldJobHash,
 			Item newItem)
 	{
-		doWithSites(site -> {
+		notifyJobMoved(DEFAULT_SITE_FILTER, oldJobHash, newItem);
+	}
+
+	public void notifyJobMoved(
+			Predicate<JiraSite> siteFilter,
+			String oldJobHash,
+			Item newItem)
+	{
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyJobMovedRequest(oldJobHash, newItem)).execute())
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was moved.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was moved.",
 					           new Object[] { site.getName(), newItem.getFullDisplayName() });
 				}
 				else
@@ -167,24 +245,42 @@ public class SitesClient
 
 	public void notifyJobDeleted(Item item)
 	{
-		notifyDeletion(site -> site.createNotifyJobDeletedRequest(item), item::getFullDisplayName);
+		notifyJobDeleted(DEFAULT_SITE_FILTER, item);
 	}
 
-	public void notifyBuildDeleted(Run run)
+	public void notifyJobDeleted(
+			Predicate<JiraSite> siteFilter,
+			Item item)
 	{
-		notifyDeletion(site -> site.createNotifyBuildDeletedRequest(run), run::getFullDisplayName);
+		notifyDeletion(siteFilter, site -> site.createNotifyJobDeletedRequest(item), item::getFullDisplayName);
+	}
+
+	public void notifyBuildDeleted(Run<?, ?> run)
+	{
+		notifyBuildDeleted(DEFAULT_SITE_FILTER, run);
+	}
+
+	public void notifyBuildDeleted(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run)
+	{
+		notifyDeletion(siteFilter, site -> site.createNotifyBuildDeletedRequest(run), run::getFullDisplayName);
 	}
 
 	private void notifyDeletion(
+			Predicate<JiraSite> siteFilter,
 			Function<JiraSite, Request> request,
 			Supplier<String> nameSupplier)
 	{
-		doWithSites(site -> {
+		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(request.apply(site)).execute())
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was deleted.", new Object[] { site.getName(), nameSupplier.get() });
+					LOGGER.log(Level.INFO,
+							"Notified {0} that {1} was deleted.",
+							new Object[]{site.getName(),
+									nameSupplier.get()});
 				}
 				else if (response.code() != 404)
 				{
@@ -200,15 +296,46 @@ public class SitesClient
 		});
 	}
 
-	private void doWithSites(Consumer<JiraSite> action)
-	{
-		doWithSites(site -> true, action);
-	}
-
 	private void doWithSites(
 			Predicate<JiraSite> filter,
 			Consumer<JiraSite> action)
 	{
 		sitesConfiguration.stream().filter(filter).forEach(action);
+	}
+
+	@SuppressWarnings("resource")
+	private static class BuildLogger
+	{
+		private final TaskListener taskListener;
+
+		BuildLogger(TaskListener taskListener)
+		{
+			this.taskListener = taskListener;
+		}
+
+		void info(
+				String format,
+				Object... args)
+		{
+			String message = String.format(format, args);
+			LOGGER.info(message);
+			if (taskListener != null)
+			{
+				taskListener.getLogger()
+						.println(message);
+			}
+		}
+
+		void error(
+				String format,
+				Object... args)
+		{
+			String message = String.format(format, args);
+			LOGGER.log(Level.SEVERE, message);
+			if (taskListener != null)
+			{
+				taskListener.error(message);
+			}
+		}
 	}
 }

@@ -1,0 +1,25 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+    <l:layout permission="${app.ADMINISTER}" title="${it.target.fullDisplayName}">
+        <st:include it="${it.target}" page="sidepanel.jelly" />
+        <l:main-panel>
+            <link rel="stylesheet" type="text/css" href="${resURL}/plugin/jira-integration/css/sync-with-jira.css"/>
+            <h1>${%title}</h1>
+            <f:form method="post" name="jji" action="submit">
+                <f:block>
+                    <p>${%select.sites(it.targetDisplayName)}</p>
+                </f:block>
+                <f:block>
+                    <j:forEach var="site" items="${it.sites}">
+                        <div class="jira-site">
+                            <f:checkbox title="${site.name}" json="${site.identifier}" field="site" checked="true"/>
+                        </div>
+                    </j:forEach>
+                </f:block>
+                <f:block>
+                    <f:apply value="${%sync.with.sites}"/>
+                </f:block>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

@@ -1,6 +1,5 @@
 package org.marvelution.jji.listener;
 
-import java.util.logging.*;
 import javax.inject.*;
 
 import org.marvelution.jji.*;
@@ -8,7 +7,6 @@ import org.marvelution.jji.*;
 import hudson.*;
 import hudson.model.*;
 import hudson.model.listeners.*;
-import hudson.util.*;
 
 /**
  * {@link SaveableListener} implementation that will notify all registered Jira instances that a {@link Run} was updated/saved after it
@@ -22,7 +20,6 @@ public class RunSaveListener
 		extends SaveableListener
 {
 
-	private static final Logger LOGGER = Logger.getLogger(RunSaveListener.class.getName());
 	private SitesClient client;
 
 	@Inject
@@ -38,7 +35,7 @@ public class RunSaveListener
 	{
 		if (o instanceof Run && !((Run) o).isLogUpdated())
 		{
-			client.notifyBuildCompleted((Run) o, new LogTaskListener(LOGGER, Level.INFO));
+			client.notifyBuildCompleted((Run) o, null);
 		}
 	}
 }

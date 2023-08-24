@@ -1,0 +1,15 @@
+.jira-site {
+    margin: 1rem 1rem 1rem 1rem;
+}
+
+.yui-button button, input[type=button] {
+    background-color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+    color: var(--btn-text-color);
+}
+
+.yui-button button:focus, .yui-button button:hover, input[type=button]:focus, input[type=button]:hover {
+    background-color: var(--btn-primary-bg-hover);
+    border-color: var(--btn-primary-bg-hover);
+    color: var(--btn-text-color);
+}

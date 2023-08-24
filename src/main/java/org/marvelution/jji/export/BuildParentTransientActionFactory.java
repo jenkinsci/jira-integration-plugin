@@ -1,7 +1,7 @@
 package org.marvelution.jji.export;
 
-import java.util.*;
 import javax.annotation.*;
+import java.util.*;
 
 import hudson.*;
 import hudson.model.*;
@@ -14,27 +14,23 @@ import jenkins.model.*;
  * @since 3.6.0
  */
 @Extension
+@SuppressWarnings("rawtypes")
 public class BuildParentTransientActionFactory
-		extends TransientActionFactory
+		extends TransientActionFactory<Run>
 {
 
 	@Override
-	public Class type()
+	public Class<Run> type()
 	{
 		return Run.class;
 	}
 
 	@Nonnull
 	@Override
-	public Collection<? extends Action> createFor(@Nonnull Object target)
+	public Collection<? extends Action> createFor(
+			@Nonnull
+			Run run)
 	{
-		if (target instanceof Run)
-		{
-			return Collections.singletonList(new ParentAction(((Run) target).getParent()));
-		}
-		else
-		{
-			return Collections.emptyList();
-		}
+		return Collections.singletonList(new ParentAction((run).getParent()));
 	}
 }

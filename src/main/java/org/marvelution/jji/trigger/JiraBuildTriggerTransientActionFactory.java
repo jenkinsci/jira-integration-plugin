@@ -11,21 +11,23 @@ import jenkins.model.*;
 import static java.util.Collections.*;
 
 @Extension
+@SuppressWarnings("rawtypes")
 public class JiraBuildTriggerTransientActionFactory
-		extends TransientActionFactory
+		extends TransientActionFactory<Job>
 {
 
 	@Override
-	public Class type()
+	public Class<Job> type()
 	{
 		return Job.class;
 	}
 
 	@Nonnull
 	@Override
-	public Collection<? extends Action> createFor(@Nonnull Object target)
+	@SuppressWarnings("unchecked")
+	public Collection<? extends Action> createFor(@Nonnull Job target)
 	{
-		if (target instanceof Job && target instanceof Queue.Task)
+		if (target instanceof Queue.Task)
 		{
 			return singleton(new JiraBuildTriggerAction<>((Job & Queue.Task) target));
 		}
