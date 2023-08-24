@@ -4,6 +4,8 @@ import javax.servlet.*;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.*;
+import java.util.logging.Logger;
 import java.util.stream.*;
 
 import org.marvelution.jji.Messages;
@@ -16,12 +18,14 @@ import hudson.util.*;
 import net.sf.json.*;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.*;
+import org.slf4j.*;
 
 import static hudson.util.QuotedStringTokenizer.*;
 
 public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         implements Action
 {
+    private final Logger logger = Logger.getLogger(getClass().getName());
     protected final SitesClient sitesClient;
     protected final S target;
 
@@ -100,6 +104,7 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         }
         catch (Exception e)
         {
+            logger.log(Level.SEVERE, "Failed to synchronize " + getTargetDisplayName() + " with Jira; " + e.getMessage(), e);
             generateResponse(request, response, Messages.unable_to_trigger_sync_of(getTargetDisplayName()), "ERROR");
         }
 
