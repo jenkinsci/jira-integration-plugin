@@ -3,6 +3,7 @@ package org.marvelution.jji;
 import javax.inject.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 
@@ -11,16 +12,21 @@ import org.marvelution.jji.configuration.*;
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
 import hudson.model.*;
+import hudson.security.*;
 import hudson.util.*;
+import jenkins.security.*;
 import okhttp3.*;
 
-@SuppressWarnings("resource")
 public class SitesClient
 {
 
 	public static final TypeReference<Map<String, String>> LINKS_TYPE = new TypeReference<>() {};
 	public static final String SYNC_RESULT_HEADER = "X-Sync-Result-Id";
 	private static final Logger LOGGER = Logger.getLogger(SitesClient.class.getName());
+	private static final Predicate<JiraSite> DEFAULT_SITE_FILTER = site -> true;
+	private final ExecutorService executor =
+			new ImpersonatingExecutorService(Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),
+					"JiraSync"))), ACL.SYSTEM2);
 	private final JiraSitesConfiguration sitesConfiguration;
 	private final OkHttpClient httpClient;
 	private final ObjectMapper objectMapper;
@@ -36,11 +42,41 @@ public class SitesClient
 		this.objectMapper = objectMapper;
 	}
 
+	public Set<JiraSite> getSites()
+	{
+		return sitesConfiguration.getSites();
+	}
+
+	public void syncBuild(
+			Predicate<JiraSite> siteFilter,
+			Run<?, ?> run)
+	{
+		executor.execute(() -> notifyBuildCompleted(siteFilter, run, null));
+	}
+
+	@SuppressWarnings("unchecked")
+	public void syncJob(
+			Predicate<JiraSite> siteFilter,
+			Item item)
+	{
+		executor.execute(() -> {
+			for (Job<? extends Job<?, ?>, ? extends Run<?, ?>> job : item.getAllJobs())
+			{
+				notifyJobModified(siteFilter, item);
+				for (Run<?, ?> build : job.getBuilds()
+						.completedOnly())
+				{
+					syncBuild(siteFilter, build);
+				}
+			}
+		});
+	}
+
 	public Map<String, String> getIssueLinks(
 			String jobHash,
 			int buildNumber)
 	{
-		return getIssueLinks(site -> true, jobHash, buildNumber);
+		return getIssueLinks(DEFAULT_SITE_FILTER, jobHash, buildNumber);
 	}
 
 	public Map<String, String> getIssueLinks(
@@ -77,25 +113,11 @@ public class SitesClient
 		return issueLinks;
 	}
 
-	public void syncBuild(
-			Predicate<JiraSite> siteFilter,
-			Run<?, ?> run)
-	{
-		notifyBuildCompleted(siteFilter, run, new LogTaskListener(LOGGER, Level.INFO));
-	}
-
-	public void syncJob(
-			Predicate<JiraSite> siteFilter,
-			Item item)
-	{
-		notifyJobModified(siteFilter, item);
-	}
-
 	public void notifyBuildCompleted(
 			Run<?, ?> run,
 			TaskListener listener)
 	{
-		notifyBuildCompleted(site -> true, run, listener);
+		notifyBuildCompleted(DEFAULT_SITE_FILTER, run, listener);
 	}
 
 	public void notifyBuildCompleted(
@@ -103,29 +125,31 @@ public class SitesClient
 			Run<?, ?> run,
 			TaskListener listener)
 	{
+		BuildLogger logger = new BuildLogger(listener);
+
 		doWithSites(siteFilter, site -> {
 			try (Response response = httpClient.newCall(site.createNotifyBuildCompleted(run)).execute())
 			{
 				String syncRequestId = response.header(SYNC_RESULT_HEADER);
 				if (response.isSuccessful())
 				{
-					listener.getLogger().printf("Notified %s that a build has completed (%s).%n", site.getName(), syncRequestId);
+					logger.info("Notified %s that a build has completed (%s).%n", site.getName(), syncRequestId);
 				}
 				else
 				{
-					listener.error("Unable to notify %s: [%d] %s", site.getName(), response.code(), response.message());
+					logger.error("Unable to notify %s: [%d] %s", site.getName(), response.code(), response.message());
 				}
 			}
 			catch (Exception e)
 			{
-				listener.error("Failed to notify %s on this builds completion -> %s", site, e.getMessage());
+				logger.error("Failed to notify %s on this builds completion -> %s", site, e.getMessage());
 			}
 		});
 	}
 
 	public void notifyJobCreated(Item item)
 	{
-		notifyJobCreated(site -> true, item);
+		notifyJobCreated(DEFAULT_SITE_FILTER, item);
 	}
 
 	public void notifyJobCreated(
@@ -137,7 +161,7 @@ public class SitesClient
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was created.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was created.",
 					           new Object[] { site.getName(), item.getFullDisplayName() });
 				}
 				else
@@ -156,7 +180,7 @@ public class SitesClient
 
 	public void notifyJobModified(Item item)
 	{
-		notifyJobModified(site -> true, item);
+		notifyJobModified(DEFAULT_SITE_FILTER, item);
 	}
 
 	public void notifyJobModified(
@@ -168,7 +192,7 @@ public class SitesClient
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was modified.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was modified.",
 					           new Object[] { site.getName(), item.getFullDisplayName() });
 				}
 				else
@@ -189,7 +213,7 @@ public class SitesClient
 			String oldJobHash,
 			Item newItem)
 	{
-		notifyJobMoved(site -> true, oldJobHash, newItem);
+		notifyJobMoved(DEFAULT_SITE_FILTER, oldJobHash, newItem);
 	}
 
 	public void notifyJobMoved(
@@ -202,7 +226,7 @@ public class SitesClient
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was moved.",
+					LOGGER.log(Level.INFO, "Notified {0} that {1} was moved.",
 					           new Object[] { site.getName(), newItem.getFullDisplayName() });
 				}
 				else
@@ -221,7 +245,7 @@ public class SitesClient
 
 	public void notifyJobDeleted(Item item)
 	{
-		notifyJobDeleted(site -> true, item);
+		notifyJobDeleted(DEFAULT_SITE_FILTER, item);
 	}
 
 	public void notifyJobDeleted(
@@ -233,7 +257,7 @@ public class SitesClient
 
 	public void notifyBuildDeleted(Run<?, ?> run)
 	{
-		notifyBuildDeleted(site -> true, run);
+		notifyBuildDeleted(DEFAULT_SITE_FILTER, run);
 	}
 
 	public void notifyBuildDeleted(
@@ -253,7 +277,10 @@ public class SitesClient
 			{
 				if (response.isSuccessful())
 				{
-					LOGGER.log(Level.FINE, "Notified {0} that {1} was deleted.", new Object[] { site.getName(), nameSupplier.get() });
+					LOGGER.log(Level.INFO,
+							"Notified {0} that {1} was deleted.",
+							new Object[]{site.getName(),
+									nameSupplier.get()});
 				}
 				else if (response.code() != 404)
 				{
@@ -274,5 +301,41 @@ public class SitesClient
 			Consumer<JiraSite> action)
 	{
 		sitesConfiguration.stream().filter(filter).forEach(action);
+	}
+
+	@SuppressWarnings("resource")
+	private static class BuildLogger
+	{
+		private final TaskListener taskListener;
+
+		BuildLogger(TaskListener taskListener)
+		{
+			this.taskListener = taskListener;
+		}
+
+		void info(
+				String format,
+				Object... args)
+		{
+			String message = String.format(format, args);
+			LOGGER.info(message);
+			if (taskListener != null)
+			{
+				taskListener.getLogger()
+						.println(message);
+			}
+		}
+
+		void error(
+				String format,
+				Object... args)
+		{
+			String message = String.format(format, args);
+			LOGGER.log(Level.SEVERE, message);
+			if (taskListener != null)
+			{
+				taskListener.error(message);
+			}
+		}
 	}
 }

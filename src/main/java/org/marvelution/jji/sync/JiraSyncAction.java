@@ -2,7 +2,9 @@ package org.marvelution.jji.sync;
 
 import javax.servlet.*;
 import java.io.*;
+import java.util.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import org.marvelution.jji.Messages;
 import org.marvelution.jji.*;
@@ -10,9 +12,12 @@ import org.marvelution.jji.configuration.*;
 
 import hudson.model.*;
 import hudson.security.*;
+import hudson.util.*;
 import net.sf.json.*;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.*;
+
+import static hudson.util.QuotedStringTokenizer.*;
 
 public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         implements Action
@@ -51,6 +56,13 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         return target;
     }
 
+    public abstract String getTargetDisplayName();
+
+    public Set<JiraSite> getSites()
+    {
+        return sitesClient.getSites();
+    }
+
     @RequirePOST
     public synchronized void doSubmit(
             StaplerRequest request,
@@ -60,38 +72,51 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         target.getACL()
                 .checkPermission(Item.CONFIGURE);
 
-        JSONObject form = request.getSubmittedForm();
+        try
+        {
+            Set<String> selectedSites = new HashSet<>();
 
-        // TODO Build filter from request
-        sync(site -> true);
+            JSONObject form = request.getSubmittedForm();
+            Object jsonSite = form.get("site");
+            if (jsonSite instanceof String)
+            {
+                selectedSites.add((String) jsonSite);
+            }
+            else if (jsonSite instanceof JSONArray)
+            {
+                selectedSites.addAll(((JSONArray) jsonSite).stream().map(Object::toString).collect(Collectors.toList()));
+            }
 
-        response.sendRedirect(".");
+            if (selectedSites.isEmpty())
+            {
+                generateResponse(request, response, Messages.no_sites_selected(), "WARNING");
+            }
+            else
+            {
+                sync(site -> selectedSites.contains(site.getIdentifier()));
+
+                generateResponse(request, response, Messages.triggered_sync_of(getTargetDisplayName()), "OK");
+            }
+        }
+        catch (Exception e)
+        {
+            generateResponse(request, response, Messages.unable_to_trigger_sync_of(getTargetDisplayName()), "ERROR");
+        }
+
+    }
+
+    private void generateResponse(
+            StaplerRequest request,
+            StaplerResponse response,
+            String message,
+            String type)
+            throws IOException, ServletException
+    {
+        FormApply.applyResponse("notificationBar.show(" + quote(message) + ",notificationBar." + type + ")")
+                .generateResponse(request, response, this);
     }
 
     protected abstract void sync(Predicate<JiraSite> siteFilter);
-
-    @SuppressWarnings("unchecked")
-    protected void syncItem(
-            Predicate<JiraSite> siteFilter,
-            Item item)
-    {
-        for (Job<? extends Job<?, ?>, ? extends Run<?, ?>> job : item.getAllJobs())
-        {
-            sitesClient.syncJob(siteFilter, job);
-            for (Run<?, ?> build : job.getBuilds()
-                    .completedOnly())
-            {
-                syncRun(siteFilter, build);
-            }
-        }
-    }
-
-    protected void syncRun(
-            Predicate<JiraSite> siteFilter,
-            Run<?, ?> run)
-    {
-        sitesClient.syncBuild(siteFilter, run);
-    }
 
     public static class ItemJiraSyncAction
             extends JiraSyncAction<Item>
@@ -104,9 +129,15 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         }
 
         @Override
+        public String getTargetDisplayName()
+        {
+            return target.getFullDisplayName();
+        }
+
+        @Override
         protected void sync(Predicate<JiraSite> siteFilter)
         {
-            syncItem(siteFilter, target);
+            sitesClient.syncJob(siteFilter, target);
         }
     }
 
@@ -122,9 +153,15 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         }
 
         @Override
+        public String getTargetDisplayName()
+        {
+            return target.getFullDisplayName();
+        }
+
+        @Override
         protected void sync(Predicate<JiraSite> siteFilter)
         {
-            syncRun(siteFilter, target);
+            sitesClient.syncBuild(siteFilter, target);
         }
     }
 
@@ -139,10 +176,17 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         }
 
         @Override
+        public String getTargetDisplayName()
+        {
+            return target.getViewName() + " of " + target.getOwner()
+                    .getDisplayName();
+        }
+
+        @Override
         protected void sync(Predicate<JiraSite> siteFilter)
         {
             target.getAllItems()
-                    .forEach(item -> syncItem(siteFilter, item));
+                    .forEach(item -> sitesClient.syncJob(siteFilter, item));
         }
     }
 }

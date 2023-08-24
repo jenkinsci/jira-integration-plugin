@@ -1,30 +1,25 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
     <l:layout permission="${app.ADMINISTER}" title="${it.target.fullDisplayName}">
         <st:include it="${it.target}" page="sidepanel.jelly" />
         <l:main-panel>
-            <j:if test="${!empty(error)}">
+            <link rel="stylesheet" type="text/css" href="${resURL}/plugin/jira-integration/css/sync-with-jira.css"/>
+            <h1>${%title}</h1>
+            <f:form method="post" name="jji" action="submit">
                 <f:block>
-                    <div class="alert alert-danger">
-                        <p>${error}</p>
-                    </div>
+                    <p>${%select.sites(it.targetDisplayName)}</p>
                 </f:block>
-            </j:if>
-            <j:if test="${!empty(warning)}">
                 <f:block>
-                    <div class="alert alert-warning">
-                        <p>${warning}</p>
-                    </div>
+                    <j:forEach var="site" items="${it.sites}">
+                        <div class="jira-site">
+                            <f:checkbox title="${site.name}" json="${site.identifier}" field="site" checked="true"/>
+                        </div>
+                    </j:forEach>
                 </f:block>
-            </j:if>
-            <j:if test="${!empty(info)}">
                 <f:block>
-                    <div class="alert alert-info">
-                        <p>${info}</p>
-                    </div>
+                    <f:apply value="${%sync.with.sites}"/>
                 </f:block>
-            </j:if>
-            Content here
+            </f:form>
         </l:main-panel>
     </l:layout>
 </j:jelly>
