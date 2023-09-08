@@ -4,6 +4,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
+import org.springframework.security.access.*;
 import org.springframework.web.filter.*;
 
 import static org.marvelution.jji.tunnel.NgrokConnector.*;
@@ -20,6 +21,12 @@ public class TunnelAuthenticationFilter
     }
 
     @Override
+    protected String getFilterName()
+    {
+        return getClass().getName();
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -30,7 +37,15 @@ public class TunnelAuthenticationFilter
         if (tunnelId != null)
         {
             String tunnelToken = request.getHeader(X_TUNNEL_TOKEN);
-            tunnelManager.verifyTunnelToken(tunnelId, tunnelToken);
+            try
+            {
+                tunnelManager.verifyTunnelToken(tunnelId, tunnelToken);
+            }
+            catch (AccessDeniedException e)
+            {
+                response.sendError(401, e.getMessage());
+                return;
+            }
         }
         chain.doFilter(request, response);
     }

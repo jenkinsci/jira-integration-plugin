@@ -60,6 +60,12 @@ public class SyncTokenAuthenticationFilter
     }
 
     @Override
+    protected String getFilterName()
+    {
+        return getClass().getName();
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,

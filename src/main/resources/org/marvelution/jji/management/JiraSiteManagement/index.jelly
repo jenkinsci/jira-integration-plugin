@@ -23,7 +23,15 @@
                             <j:forEach var="site" items="${it.sites}">
                                 <tr data-site-uri="${site.uri}">
                                     <td>${site.name}</td>
-                                    <td>${site.uri}</td>
+                                    <td>
+                                        ${site.uri}
+                                        <j:set var="connectionError" value="${it.getSiteConnectionError(site.identifier)}"/>
+                                        <j:if test="${connectionError != null}">
+                                            <div class="error">
+                                                ${connectionError}
+                                            </div>
+                                        </j:if>
+                                    </td>
                                     <td>
                                         <j:if test="${site.tunneled}">
                                             <a href="#" class="refresh-tunnel">

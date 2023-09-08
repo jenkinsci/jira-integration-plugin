@@ -1,5 +1,6 @@
 package org.marvelution.jji.management;
 
+import javax.annotation.*;
 import javax.inject.*;
 import javax.servlet.*;
 import java.io.*;
@@ -103,6 +104,15 @@ public class JiraSiteManagement
                 .collect(toCollection(LinkedHashSet::new));
     }
 
+    @Nullable
+    public String getSiteConnectionError(String siteId)
+    {
+        return sitesConfiguration.findSite(siteId)
+                .filter(JiraSite::isTunneled)
+                .map(site -> tunnelManager.getSiteConnectionError(site))
+                .orElse(null);
+    }
+
     @JavaScriptMethod
     public void deleteSite(String uri)
     {
@@ -132,6 +142,7 @@ public class JiraSiteManagement
     public void refreshTunnel(String url)
     {
         sitesConfiguration.findSite(URI.create(url))
+                .filter(JiraSite::isTunneled)
                 .ifPresent(tunnelManager::refreshTunnel);
     }
 

@@ -13,7 +13,7 @@ public class JiraIntegrationPlugin
 
     public static final String OLD_SHORT_NAME = "jenkins-jira-plugin";
     public static final String SHORT_NAME = "jira-integration";
-    public static final String VERSION_HEADER = "X-JJI-Version";
+    public static final String VERSION_HEADER = "X-JiraIntegration";
     private static final Logger LOGGER = Logger.getLogger(JiraIntegrationPlugin.class.getName());
     private static String VERSION = "?";
 

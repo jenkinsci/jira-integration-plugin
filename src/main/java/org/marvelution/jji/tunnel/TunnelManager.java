@@ -1,14 +1,15 @@
 package org.marvelution.jji.tunnel;
 
+import javax.annotation.*;
 import javax.inject.*;
 import javax.servlet.*;
 import java.io.*;
 import java.net.*;
-import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
+import org.marvelution.jji.Messages;
 import org.marvelution.jji.*;
 import org.marvelution.jji.configuration.*;
 
@@ -20,7 +21,7 @@ import hudson.model.listeners.*;
 import hudson.util.*;
 import jenkins.model.*;
 import okhttp3.*;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.*;
 
 @Extension
 public class TunnelManager
@@ -28,9 +29,8 @@ public class TunnelManager
 {
     private static final Logger LOGGER = Logger.getLogger(TunnelManager.class.getName());
     private static final String UNKNOWN = "unknown";
-    private final ExecutorService tunnelExecutor = Executors.newCachedThreadPool();
     private final Map<String, NgrokConnector> tunnels = new ConcurrentHashMap<>();
-    private boolean loadedNgrokNative = false;
+    private ClassLoader tunnelClassLoader;
     private boolean loadedTunnelFilter = false;
     private String forwardTo;
     private OkHttpClient httpClient;
@@ -157,6 +157,11 @@ public class TunnelManager
         }
     }
 
+    public ClassLoader getTunnelClassLoader()
+    {
+        return tunnelClassLoader;
+    }
+
     private static String normalize(final String value)
     {
         if (value == null)
@@ -177,26 +182,19 @@ public class TunnelManager
             PluginWrapper wrapper = plugin.getWrapper();
             String os = normalizeOs(System.getProperty("os.name"));
             String arch = normalizeArch(System.getProperty("os.arch"));
-            String libName = "ngrok/ngrok-java-native-" + os + "-" + arch + ".jar";
-            URL library = wrapper.classLoader.getResource(libName);
 
-            if (library != null)
+            String libraryFile = "WEB-INF/ngrok/ngrok-java-native-" + os + "-" + arch + ".jar";
+            try
             {
-                try
-                {
-                    LOGGER.fine("Adding " + library + " to plugin classpath");
-                    wrapper.injectJarsToClasspath(Paths.get(library.toURI())
-                            .toFile());
-                    loadedNgrokNative = true;
-                }
-                catch (Exception e)
-                {
-                    LOGGER.warning("Disabling tunneling, unable to add ngrok-java-native library to plugin classpath: " + library);
-                }
+                URL library = new URL(wrapper.baseResourceURL, libraryFile);
+                LOGGER.info("Created classloader to support tunneling using " + library);
+                tunnelClassLoader = new URLClassLoader(new URL[]{library}, wrapper.classLoader);
             }
-            else
+            catch (Exception e)
             {
-                LOGGER.warning("Disabling tunneling, unable to load required ngrok-java-native library: " + libName);
+                LOGGER.log(Level.WARNING,
+                        "Disabling tunneling, unable to add ngrok-java-native library to plugin classpath: " + libraryFile,
+                        e);
             }
         }
         else
@@ -208,7 +206,7 @@ public class TunnelManager
     @Initializer(after = InitMilestone.SYSTEM_CONFIG_ADAPTED)
     public void addTunnelAuthenticationFilter()
     {
-        if (loadedNgrokNative)
+        if (tunnelClassLoader != null)
         {
             LOGGER.log(Level.INFO, "Adding tunnel authentication filter");
             TunnelAuthenticationFilter filter = new TunnelAuthenticationFilter(this);
@@ -234,7 +232,7 @@ public class TunnelManager
     @Initializer(after = InitMilestone.JOB_CONFIG_ADAPTED)
     public void connectRequiredTunnels()
     {
-        if (loadedNgrokNative && loadedTunnelFilter)
+        if (tunnelClassLoader != null && loadedTunnelFilter)
         {
             LOGGER.log(Level.INFO, "Connecting any required tunnels");
             JiraSitesConfiguration.get()
@@ -246,7 +244,7 @@ public class TunnelManager
         }
         else
         {
-            LOGGER.log(Level.WARNING, "Not connect any required tunnels, required libraries are not loaded.");
+            LOGGER.log(Level.WARNING, "Not connecting any required tunnels, required libraries are not loaded.");
         }
     }
 
@@ -263,7 +261,7 @@ public class TunnelManager
     {
         if (site.isTunneled())
         {
-            if (loadedNgrokNative && loadedTunnelFilter)
+            if (tunnelClassLoader != null && loadedTunnelFilter)
             {
                 tunnels.computeIfAbsent(site.getIdentifier(), id -> {
                     try (Response response = httpClient.newCall(site.createGetTunnelDetailsRequest())
@@ -289,7 +287,7 @@ public class TunnelManager
                     return null;
                 });
             }
-            else if (!loadedNgrokNative)
+            else if (tunnelClassLoader == null)
             {
                 LOGGER.log(Level.WARNING, "Cannot connect tunnel for " + site + ", required libraries are not loaded.");
             }
@@ -304,6 +302,54 @@ public class TunnelManager
     {
         disconnectTunnelForSite(site);
         connectTunnelIfNeeded(site);
+    }
+
+    @Nullable
+    public String getSiteConnectionError(JiraSite site)
+    {
+        if (site.isTunneled())
+        {
+            NgrokConnector connector = tunnels.get(site.getIdentifier());
+            if (connector == null)
+            {
+                return Messages.site_tunnel_not_connected();
+            }
+            else
+            {
+                return Optional.ofNullable(connector.getConnectException())
+                        .map(error -> {
+                            if (isUnsatisfiedLinkError(error))
+                            {
+                                return Messages.site_tunnel_unsatisfied_link_error();
+                            }
+                            else
+                            {
+                                return error.getMessage();
+                            }
+                        })
+                        .orElse(null);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private boolean isUnsatisfiedLinkError(Throwable error)
+    {
+        if (error instanceof UnsatisfiedLinkError)
+        {
+            return true;
+        }
+        else if (error.getCause() != null)
+        {
+            return isUnsatisfiedLinkError(error.getCause());
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void stopTunneling()

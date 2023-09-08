@@ -37,6 +37,7 @@
             } else if (this.hasClassName('refresh-tunnel')) {
                 JJI.refreshTunnel(url, function (response) {
                     alert('Refreshing tunnel');
+                    window.location.reload();
                 });
             }
         };

@@ -1,28 +1,30 @@
 package org.marvelution.jji.tunnel;
 
+import javax.annotation.*;
 import java.io.*;
-import java.util.concurrent.*;
+import java.lang.reflect.*;
 import java.util.logging.*;
 
 import org.marvelution.jji.*;
 import org.marvelution.jji.configuration.*;
 
 import com.ngrok.*;
+import jakarta.json.*;
 import jenkins.model.*;
 import org.springframework.security.access.*;
 
 public class NgrokConnector
 {
-    private static final Logger LOGGER = Logger.getLogger(NgrokConnector.class.getName());
     public static final String X_TUNNEL_ID = "X-Tunnel-Id";
     public static final String X_TUNNEL_TOKEN = "X-Tunnel-Token";
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final Logger LOGGER = Logger.getLogger(NgrokConnector.class.getName());
     private final TunnelManager tunnelManager;
     private final JiraSite site;
     private final TunnelDetails details;
+    private Thread runner;
+    private Throwable connectException;
     private Session session;
     private Tunnel tunnel;
-    private Future<?> runner;
 
     public NgrokConnector(
             TunnelManager tunnelManager,
@@ -52,33 +54,78 @@ public class NgrokConnector
     {
         if (runner == null)
         {
-            runner = executor.submit(this::doConnect);
+            runner = new Thread(this::doConnect);
+            runner.start();
         }
     }
 
     private void doConnect()
     {
         LOGGER.info("Connecting tunnel for " + site);
+        String metadata = Json.createObjectBuilder()
+                .add("site", site.getIdentifier())
+                .build()
+                .toString();
+        String forwardTo = tunnelManager.getForwardTo();
         try
         {
-            session = Session.connect(Session.newBuilder(details.authtoken)
+            session = sessionConnect(Session.newBuilder(details.authtoken)
+                    .metadata(metadata)
                     .addUserAgent("Jenkins", Jenkins.VERSION)
                     .addUserAgent("jira-integration", JiraIntegrationPlugin.getVersion())
                     .serverAddr(details.serverAddr)
-                    .stopCallback(() -> LOGGER.info(String.format("Stopping tunnel %s", details.domain)))
-                    .restartCallback(() -> LOGGER.info(String.format("Restarting tunnel %s", details.domain)))
-                    .updateCallback(() -> LOGGER.info(String.format("Updated tunnel %s", details.domain)))
+                    .stopCallback(() -> {
+                        LOGGER.info(String.format("Stop callback received for tunnel %s", details.domain));
+                        tunnelManager.disconnectTunnelForSite(site);
+                    })
+                    .restartCallback(() -> {
+                        LOGGER.info(String.format("Restart callback received for tunnel%s", details.domain));
+                        reconnect();
+                    })
+                    .updateCallback(() -> {
+                        LOGGER.info(String.format("Update callback received for tunnel %s", details.domain));
+                        reconnect();
+                    })
                     .heartbeatHandler(latency -> LOGGER.fine(String.format("Tunnel %s heartbeat %d ms", details.domain, latency))));
-            String forwardTo = tunnelManager.getForwardTo();
             tunnel = session.httpTunnel(new HttpTunnel.Builder().domain(details.domain)
                     .scheme(HttpTunnel.Scheme.HTTPS)
                     .addRequestHeader(X_TUNNEL_ID, site.getIdentifier())
+                    .metadata(metadata)
                     .forwardsTo(forwardTo));
             tunnel.forwardTcp(forwardTo);
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             LOGGER.log(Level.SEVERE, "Failed to setup the tunnel session", e);
+            connectException = e;
+        }
+    }
+
+    private Session sessionConnect(Session.Builder builder)
+            throws IOException
+    {
+        try
+        {
+            Class<?> clazz = tunnelManager.getTunnelClassLoader()
+                    .loadClass("com.ngrok.NativeSession");
+            Method method = clazz.getMethod("connect", Session.Builder.class);
+            return (Session) method.invoke(null, builder);
+        }
+        catch (InvocationTargetException e)
+        {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException)
+            {
+                throw (IOException) cause;
+            }
+            else
+            {
+                throw new RuntimeException(cause);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
@@ -89,11 +136,11 @@ public class NgrokConnector
             LOGGER.info("Disconnecting tunnel for " + site);
             try
             {
-                runner.cancel(true);
-                runner = null;
-                tunnel.close();
-                tunnel = null;
+                session.closeTunnel(tunnel.getId());
                 session.close();
+                connectException = null;
+                runner = null;
+                tunnel = null;
                 session = null;
             }
             catch (Exception e)
@@ -113,7 +160,11 @@ public class NgrokConnector
     public void close()
     {
         disconnect();
-        LOGGER.info("Closing tunnel for " + site);
-        executor.shutdown();
+    }
+
+    @Nullable
+    public Throwable getConnectException()
+    {
+        return connectException;
     }
 }
