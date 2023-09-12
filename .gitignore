@@ -10,3 +10,4 @@ work
 dependency-reduced-pom.xml
 docs/public
 docs/resources
+ngrok-java-native-*.jar

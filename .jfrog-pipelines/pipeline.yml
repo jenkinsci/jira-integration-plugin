@@ -26,14 +26,6 @@ resources:
   type: Marvelution/Functions
   configuration:
     functions: all
-- name: {{.Values.pipeline.name}}_JiraVersion
-  type: Marvelution/JiraVersion
-  configuration:
-    jira: {{.Values.versioning.jira}}
-    projectKey: {{.Values.versioning.project}}
-    version: 'tbd'
-    versionPrefix: 'jenkins-'
-    optional: true
 
 pipelines:
 - name: {{.Values.pipeline.name}}_Release
@@ -62,8 +54,6 @@ pipelines:
       - name: {{.Values.pipeline.name}}_CommonGitRepo
         trigger: false
       - name: {{.Values.pipeline.name}}_Functions
-      outputResources:
-      - name: {{.Values.pipeline.name}}_JiraVersion
     execution:
       onExecute:
       - export pluginResourcePath=$(find_resource_variable "{{.Values.pipeline.name}}_PluginGitRepo" resourcePath)
@@ -85,4 +75,11 @@ pipelines:
 
       - popd
 
-      - write_output {{.Values.pipeline.name}}_JiraVersion "version=${version}"
+      - task: marvelution/release-jira-version@v0.1.0
+        id: release-jira-version
+        input:
+          jira: {{.Values.versioning.jira}}
+          projectKey: {{.Values.versioning.project}}
+          version: ${version}
+          versionPrefix: 'jenkins-'
+          optional: true

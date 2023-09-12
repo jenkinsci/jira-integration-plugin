@@ -1,6 +1,7 @@
 package org.marvelution.jji.configuration;
 
 import javax.annotation.*;
+import javax.inject.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -9,12 +10,14 @@ import java.util.logging.*;
 import java.util.stream.*;
 
 import com.cloudbees.plugins.credentials.*;
+import com.fasterxml.jackson.databind.*;
 import hudson.*;
 import hudson.init.*;
 import hudson.security.*;
 import hudson.util.*;
 import jenkins.model.*;
 import net.sf.json.*;
+import okhttp3.*;
 import org.apache.commons.lang3.*;
 import org.jenkinsci.*;
 import org.jenkinsci.plugins.plaincredentials.*;
@@ -39,7 +42,7 @@ public class JiraSitesConfiguration
     public static JiraSitesConfiguration get()
     {
         return (JiraSitesConfiguration) Jenkins.get()
-                                               .getDescriptorOrDie(JiraSitesConfiguration.class);
+                .getDescriptorOrDie(JiraSitesConfiguration.class);
     }
 
     @Override
@@ -69,15 +72,15 @@ public class JiraSitesConfiguration
     public Optional<JiraSite> findSite(URI uri)
     {
         return sites.stream()
-                    .filter(site -> Objects.equals(site.getUri(), uri))
-                    .findFirst();
+                .filter(site -> Objects.equals(site.getUri(), uri))
+                .findFirst();
     }
 
     public Optional<JiraSite> findSite(String identifier)
     {
         return sites.stream()
-                    .filter(site -> Objects.equals(site.getIdentifier(), identifier))
-                    .findFirst();
+                .filter(site -> Objects.equals(site.getIdentifier(), identifier))
+                .findFirst();
     }
 
     public void registerSite(JiraSite site)
@@ -85,12 +88,12 @@ public class JiraSitesConfiguration
         Optional<JiraSite> existing = getExistingSite(site.getUri());
         if (existing.isPresent())
         {
-            LOGGER.log(Level.INFO, "Updating registration for Jira site {0}", site);
+            LOGGER.log(Level.INFO, "Updating registration for {0}", site);
             updateSiteRegistration(existing.get(), site);
         }
         else
         {
-            LOGGER.log(Level.INFO, "Adding registration for Jira site {0}", site);
+            LOGGER.log(Level.INFO, "Adding registration for {0}", site);
             storeSharedSecretAsCredentials(site);
             sites.add(site);
         }
@@ -128,7 +131,7 @@ public class JiraSitesConfiguration
         }
         catch (IOException e)
         {
-            LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for Jira site " + site, e);
+            LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for " + site, e);
         }
     }
 
@@ -149,7 +152,7 @@ public class JiraSitesConfiguration
                         }
                         catch (IOException e)
                         {
-                            LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for Jira site " + site, e);
+                            LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for " + site, e);
                         }
                     });
         }
@@ -165,19 +168,19 @@ public class JiraSitesConfiguration
     private void removeSharedSecretCredentials(JiraSite site)
     {
         site.getSharedSecretCredentials()
-            .ifPresent(credentials -> {
-                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2))
-                {
-                    new SystemCredentialsProvider.StoreImpl().removeCredentials(site.getDomain(), credentials);
-                    site.setSharedSecretId(null);
-                    site.setSharedSecret(credentials.getSecret()
-                                                    .getPlainText());
-                }
-                catch (IOException e)
-                {
-                    LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for Jira site " + site, e);
-                }
-            });
+                .ifPresent(credentials -> {
+                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2))
+                    {
+                        new SystemCredentialsProvider.StoreImpl().removeCredentials(site.getDomain(), credentials);
+                        site.setSharedSecretId(null);
+                        site.setSharedSecret(credentials.getSecret()
+                                .getPlainText());
+                    }
+                    catch (IOException e)
+                    {
+                        LOGGER.log(Level.WARNING, "Failed to store shared secret credentials for " + site, e);
+                    }
+                });
     }
 
     @Nonnull
@@ -186,7 +189,7 @@ public class JiraSitesConfiguration
         String description = String.format("Jira Integration (%s) auto generated shared secret credentials", site.getName());
         return new StringCredentialsImpl(CredentialsScope.GLOBAL,
                 UUID.randomUUID()
-                    .toString(),
+                        .toString(),
                 description,
                 Secret.fromString(site.getSharedSecret()));
     }
@@ -195,9 +198,9 @@ public class JiraSitesConfiguration
     private Optional<JiraSite> getExistingSite(URI uri)
     {
         return sites.stream()
-                    .filter(site -> site.getUri()
-                                        .equals(uri))
-                    .findFirst();
+                .filter(site -> site.getUri()
+                        .equals(uri))
+                .findFirst();
     }
 
     @Override

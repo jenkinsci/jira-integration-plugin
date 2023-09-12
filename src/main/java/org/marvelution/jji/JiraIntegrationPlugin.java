@@ -1,6 +1,7 @@
 package org.marvelution.jji;
 
 import java.io.*;
+import java.util.*;
 import java.util.logging.*;
 
 import hudson.*;
@@ -12,15 +13,35 @@ public class JiraIntegrationPlugin
 
     public static final String OLD_SHORT_NAME = "jenkins-jira-plugin";
     public static final String SHORT_NAME = "jira-integration";
-    public static final String VERSION_HEADER = "X-JJI-Version";
+    public static final String VERSION_HEADER = "X-JiraIntegration";
     private static final Logger LOGGER = Logger.getLogger(JiraIntegrationPlugin.class.getName());
+    private static String VERSION = "?";
+
+    public static String getVersion()
+    {
+        if (VERSION.equals("?"))
+        {
+            Plugin plugin = Jenkins.get()
+                    .getPlugin(SHORT_NAME);
+            if (plugin == null)
+            {
+                LOGGER.log(Level.WARNING, "Unable to locate plugin " + SHORT_NAME);
+            }
+            else
+            {
+                VERSION = plugin.getWrapper()
+                        .getVersion();
+            }
+        }
+        return VERSION;
+    }
 
     @Initializer(after = InitMilestone.STARTED)
     public static void init()
             throws Exception
     {
         Plugin plugin = Jenkins.get()
-                               .getPlugin(JiraIntegrationPlugin.OLD_SHORT_NAME);
+                .getPlugin(OLD_SHORT_NAME);
         if (plugin != null)
         {
             LOGGER.warning(String.format("Plugin %s is installed, but should be disabled or uninstalled as it doesn't work with plugin %s.",
@@ -45,14 +66,14 @@ public class JiraIntegrationPlugin
                 }
                 LOGGER.warning("Triggering restart of Jenkins...");
                 Jenkins.get()
-                       .restart();
+                        .restart();
             }
             else if (result.getStatus() != PluginWrapper.PluginDisableStatus.ALREADY_DISABLED)
             {
                 LOGGER.severe(String.format("Failed to disable %s, this plugin should be manually disabled followed by a restart of Jenkins",
                         OLD_SHORT_NAME));
                 throw new IllegalStateException("Plugin " + plugin.getWrapper()
-                                                                  .getDisplayName() + " (" + OLD_SHORT_NAME + ") needs to be uninstalled.");
+                        .getDisplayName() + " (" + OLD_SHORT_NAME + ") needs to be uninstalled.");
             }
             else
             {

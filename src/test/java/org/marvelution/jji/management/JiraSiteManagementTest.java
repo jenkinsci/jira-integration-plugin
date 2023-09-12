@@ -23,8 +23,8 @@ public class JiraSiteManagementTest
     public void setUp()
     {
         jiraSite = new JiraSite(URI.create("http://localhost:2990/jira/rest/jenkins/latest")).withName("Local Jira")
-                                                                                             .withIdentifier("identifier")
-                                                                                             .withSharedSecret(SharedSecretGenerator.generate());
+                .withIdentifier("identifier")
+                .withSharedSecret(SharedSecretGenerator.generate());
     }
 
     @Test
@@ -32,14 +32,14 @@ public class JiraSiteManagementTest
             throws Exception
     {
         authorizationStrategy.grant(ADMINISTER)
-                             .everywhere()
-                             .to(ALICE);
+                .everywhere()
+                .to(ALICE);
 
         try (Response response = registerJiraSite(jiraSite, Credentials.basic(ALICE, ALICE)))
         {
             assertThat(response.isSuccessful()).isTrue();
             assertThat(sitesConfiguration.getSites()).hasSize(1)
-                                                     .containsOnly(jiraSite);
+                    .containsOnly(jiraSite);
         }
     }
 
@@ -75,7 +75,7 @@ public class JiraSiteManagementTest
         {
             assertThat(response.isSuccessful()).isTrue();
             assertThat(sitesConfiguration.getSites()).hasSize(1)
-                                                     .containsOnly(jiraSite);
+                    .containsOnly(jiraSite);
         }
     }
 
@@ -108,15 +108,15 @@ public class JiraSiteManagementTest
             throws Exception
     {
         JiraSite site = new JiraSite(URI.create("http://localhost:8080/jira/rest/jenkins/latest")).withName("Local Jira")
-                                                                                                  .withIdentifier("identifier")
-                                                                                                  .withSharedSecret("shared-secret");
+                .withIdentifier("identifier")
+                .withSharedSecret("shared-secret");
         injectSite(site);
 
         try (Response response = unregisterJiraSite(jiraSite))
         {
             assertThat(response.isSuccessful()).isFalse();
             assertThat(sitesConfiguration.getSites()).hasSize(1)
-                                                     .containsOnly(site);
+                    .containsOnly(site);
         }
     }
 
@@ -125,15 +125,15 @@ public class JiraSiteManagementTest
             throws Exception
     {
         JiraSite site = new JiraSite(URI.create("http://localhost:8080/jira/rest/jenkins/latest")).withName("Local Jira")
-                                                                                                  .withIdentifier("identifier")
-                                                                                                  .withSharedSecret("shared-secret");
+                .withIdentifier("identifier")
+                .withSharedSecret("shared-secret");
         injectSite(site);
 
         try (Response response = unregisterJiraSite(site, request -> request.addHeader("Authorization", Credentials.basic(ALICE, ALICE))))
         {
             assertThat(response.isSuccessful()).isFalse();
             assertThat(sitesConfiguration.getSites()).hasSize(1)
-                                                     .containsOnly(site);
+                    .containsOnly(site);
         }
 
     }
@@ -165,6 +165,7 @@ public class JiraSiteManagementTest
         site.put("name", jiraSite.getName());
         site.put("identifier", jiraSite.getIdentifier());
         site.put("sharedSecret", jiraSite.getSharedSecret());
+        site.put("firewalled", jiraSite.isPostJson());
         return doAction("register", site, requestCustomizer);
     }
 
@@ -195,17 +196,17 @@ public class JiraSiteManagementTest
     {
 
         HttpUrl url = Objects.requireNonNull(HttpUrl.get(jenkins.getURL()))
-                             .newBuilder()
-                             .addPathSegment(JiraSiteManagement.URL_NAME)
-                             .addPathSegment(action)
-                             .build();
+                .newBuilder()
+                .addPathSegment(JiraSiteManagement.URL_NAME)
+                .addPathSegment(action)
+                .build();
 
         Request.Builder request = new Request.Builder().url(url)
-                                                       .post(RequestBody.create(objectMapper.writeValueAsString(payload), JiraSite.JSON));
+                .post(RequestBody.create(objectMapper.writeValueAsString(payload), JiraSite.JSON));
 
         request = requestCustomizer.apply(request);
 
         return httpClient.newCall(request.build())
-                         .execute();
+                .execute();
     }
 }
