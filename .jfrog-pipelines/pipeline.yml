@@ -48,6 +48,7 @@ pipelines:
     configuration:
       integrations:
       - name: {{.Values.artifactory}}
+      - name: {{.Values.versioning.jira}}
       - name: {{.Values.common.sshKey}}
       inputResources:
       - name: {{.Values.pipeline.name}}_PluginGitRepo
