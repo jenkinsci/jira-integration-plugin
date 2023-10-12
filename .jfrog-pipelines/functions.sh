@@ -12,7 +12,8 @@ generate_release_notes() {
 title: "${version}"
 date: ${releasedAt}
 draft: false
-layout: none
+outputs:
+- note
 
 dl: new-dl
 version: "${releaseName}"
