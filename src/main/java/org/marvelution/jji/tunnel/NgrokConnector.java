@@ -3,6 +3,7 @@ package org.marvelution.jji.tunnel;
 import javax.annotation.*;
 import java.io.*;
 import java.lang.reflect.*;
+import java.net.*;
 import java.util.logging.*;
 
 import org.marvelution.jji.*;
@@ -24,7 +25,7 @@ public class NgrokConnector
     private Thread runner;
     private Throwable connectException;
     private Session session;
-    private Tunnel tunnel;
+    private Forwarder.Endpoint endpoint;
 
     public NgrokConnector(
             TunnelManager tunnelManager,
@@ -69,10 +70,10 @@ public class NgrokConnector
         String forwardTo = tunnelManager.getForwardTo();
         try
         {
-            session = sessionConnect(Session.newBuilder(details.authtoken)
+            session = sessionConnect(Session.withAuthtoken(details.authtoken)
                     .metadata(metadata)
-                    .addUserAgent("Jenkins", Jenkins.VERSION)
-                    .addUserAgent("jira-integration", JiraIntegrationPlugin.getVersion())
+                    .addClientInfo("Jenkins", Jenkins.VERSION)
+                    .addClientInfo("jira-integration", JiraIntegrationPlugin.getVersion())
                     .serverAddr(details.serverAddr)
                     .stopCallback(() -> {
                         LOGGER.info(String.format("Stop callback received for tunnel %s", details.domain));
@@ -87,12 +88,13 @@ public class NgrokConnector
                         reconnect();
                     })
                     .heartbeatHandler(latency -> LOGGER.fine(String.format("Tunnel %s heartbeat %d ms", details.domain, latency))));
-            tunnel = session.httpTunnel(new HttpTunnel.Builder().domain(details.domain)
-                    .scheme(HttpTunnel.Scheme.HTTPS)
+            endpoint = session.httpEndpoint()
+                    .scheme(Http.Scheme.HTTPS)
                     .addRequestHeader(X_TUNNEL_ID, site.getIdentifier())
                     .metadata(metadata)
-                    .forwardsTo(forwardTo));
-            tunnel.forwardTcp(forwardTo);
+                    .forwardsTo(forwardTo)
+                    .forward(URI.create(forwardTo)
+                            .toURL());
         }
         catch (Throwable e)
         {
@@ -136,11 +138,11 @@ public class NgrokConnector
             LOGGER.info("Disconnecting tunnel for " + site);
             try
             {
-                session.closeTunnel(tunnel.getId());
+                session.closeForwarder(endpoint.getId());
                 session.close();
                 connectException = null;
                 runner = null;
-                tunnel = null;
+                endpoint = null;
                 session = null;
             }
             catch (Exception e)
