@@ -46,7 +46,7 @@
         <jenkins.baseline>2.361</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <job-dsl.version>1.81</job-dsl.version>
-        <ngrok.version>0.5.0</ngrok.version>
+        <ngrok.version>1.0.0</ngrok.version>
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
