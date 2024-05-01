@@ -3,6 +3,7 @@ package org.marvelution.jji.listener;
 import javax.inject.*;
 
 import org.marvelution.jji.*;
+import org.marvelution.jji.events.JobNotificationType;
 
 import hudson.*;
 import hudson.model.*;
@@ -47,6 +48,6 @@ public class JobListener
 	@Override
 	public void onUpdated(Item item)
 	{
-		client.notifyJobModified(item);
+		client.notifyJobModified(item, JobNotificationType.JOB_MODIFIED);
 	}
 }

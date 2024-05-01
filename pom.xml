@@ -42,7 +42,7 @@
 
         <filterModified>true</filterModified>
 
-        <jenkins.integration.common.version>1.45</jenkins.integration.common.version>
+        <jenkins.integration.common.version>1.58-SNAPSHOT</jenkins.integration.common.version>
         <jenkins.baseline>2.361</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <job-dsl.version>1.81</job-dsl.version>
@@ -107,6 +107,12 @@
                 <version>1</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>2.0.1</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -119,8 +125,12 @@
             <version>${jenkins.integration.common.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
+                    <groupId>com.atlassian.connect</groupId>
+                    <artifactId>atlassian-connect-spring-boot-jwt</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.security</groupId>
+                    <artifactId>spring-security-oauth2-jose</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
