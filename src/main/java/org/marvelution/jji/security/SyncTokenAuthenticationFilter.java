@@ -1,22 +1,32 @@
 package org.marvelution.jji.security;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.io.*;
-import java.util.logging.*;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.marvelution.jji.configuration.*;
-import org.marvelution.jji.management.*;
-import org.marvelution.jji.synctoken.*;
-import org.marvelution.jji.synctoken.exceptions.*;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.management.JiraSiteManagement;
+import org.marvelution.jji.synctoken.SyncTokenAuthenticator;
+import org.marvelution.jji.synctoken.SyncTokenRequest;
+import org.marvelution.jji.synctoken.exceptions.SyncTokenRequiredException;
+import org.marvelution.jji.synctoken.exceptions.UnknownSyncTokenIssuerException;
 
-import com.nimbusds.jwt.*;
-import hudson.init.*;
-import hudson.util.*;
-import org.jenkinsci.plugins.plaincredentials.*;
-import org.springframework.security.access.*;
-import org.springframework.security.core.context.*;
-import org.springframework.web.filter.*;
+import com.nimbusds.jwt.JWTClaimsSet;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.util.PluginServletFilter;
+import hudson.util.Secret;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 public class SyncTokenAuthenticationFilter
         extends OncePerRequestFilter
@@ -74,7 +84,7 @@ public class SyncTokenAuthenticationFilter
     {
         try
         {
-            JWTClaimsSet claimsSet = tokenAuthenticator.authenticate(request);
+            JWTClaimsSet claimsSet = tokenAuthenticator.authenticate(new SyncTokenRequest(request));
             LOGGER.log(Level.FINE, "Authenticated {0} through Sync Token.", claimsSet.getIssuer());
             JiraSite site = sitesConfiguration.findSite(claimsSet.getIssuer())
                     .orElseThrow(() -> new IllegalStateException("Authenticated by sync-token but unable to find a Jira site for it."));

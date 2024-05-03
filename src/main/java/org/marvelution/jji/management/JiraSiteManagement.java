@@ -19,6 +19,7 @@ import hudson.model.*;
 import jenkins.model.*;
 import net.sf.json.*;
 import okhttp3.*;
+import okhttp3.Request;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.bind.*;
 import org.kohsuke.stapler.interceptor.*;
@@ -166,7 +167,7 @@ public class JiraSiteManagement
             String token = req.getParameter("token");
 
             try (Response response = httpClient.newCall(new Request.Builder().get()
-                            .addHeader(SYNC_TOKEN_HEADER_NAME, token)
+                            .addHeader(OLD_SYNC_TOKEN_HEADER_NAME, token)
                             .url(url)
                             .build())
                     .execute())

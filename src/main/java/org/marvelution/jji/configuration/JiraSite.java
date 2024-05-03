@@ -1,26 +1,39 @@
 package org.marvelution.jji.configuration;
 
-import java.io.*;
-import java.net.*;
-import java.security.interfaces.*;
-import java.util.*;
-import java.util.stream.*;
+import java.io.Serializable;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.marvelution.jji.*;
-import org.marvelution.jji.model.parsers.*;
-import org.marvelution.jji.synctoken.*;
+import org.marvelution.jji.JiraUtils;
+import org.marvelution.jji.events.JobNotificationType;
+import org.marvelution.jji.model.parsers.ParserProvider;
+import org.marvelution.jji.synctoken.CanonicalHttpServletRequest;
+import org.marvelution.jji.synctoken.SyncTokenBuilder;
 
-import com.cloudbees.plugins.credentials.*;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.*;
-import hudson.*;
-import hudson.model.*;
-import hudson.security.*;
-import hudson.util.*;
-import jenkins.model.*;
-import okhttp3.*;
-import org.apache.commons.lang3.*;
-import org.jenkinsci.plugins.plaincredentials.*;
-import org.kohsuke.stapler.*;
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.security.ACL;
+import hudson.util.Secret;
+import jenkins.model.Jenkins;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
+import static org.marvelution.jji.Headers.NOTIFICATION_TYPE;
 
 public class JiraSite
         extends AbstractDescribableImpl<JiraSite>
@@ -173,13 +186,17 @@ public class JiraSite
     public Request createNotifyJobCreatedRequest(Item item)
     {
         return signRequest(new Request.Builder().url(getHttpUrl("integration/" + JiraUtils.getJobHash(item)))
+                .header(NOTIFICATION_TYPE, JobNotificationType.JOB_CREATED.value())
                 .post(RequestBody.create(JiraUtils.asJson(item, Arrays.asList("name", "url")), JSON))
                 .build());
     }
 
-    public Request createNotifyJobModifiedRequest(Item item)
+    public Request createNotifyJobRequest(
+            Item item,
+            JobNotificationType notificationType)
     {
         return signRequest(new Request.Builder().url(getHttpUrl("integration/" + JiraUtils.getJobHash(item)))
+                .header(NOTIFICATION_TYPE, notificationType.value())
                 .post(RequestBody.create(JiraUtils.asJson(item,
                         ParserProvider.jobParser()
                                 .fields()), JSON))
@@ -193,6 +210,7 @@ public class JiraSite
         return signRequest(new Request.Builder().post(RequestBody.create(JiraUtils.asJson(newItem,
                         ParserProvider.jobParser()
                                 .fields()), JSON))
+                .header(NOTIFICATION_TYPE, JobNotificationType.JOB_MOVED.value())
                 .url(getHttpUrl("integration/" + oldJobHash))
                 .build());
     }
@@ -257,17 +275,16 @@ public class JiraSite
                 .or(() -> Optional.ofNullable(sharedSecret))
                 .filter(StringUtils::isNotBlank)
                 .map(sharedSecret -> {
-                    SimpleCanonicalHttpRequest canonicalHttpRequest = new SimpleCanonicalHttpRequest(request.method(),
+                    CanonicalHttpServletRequest canonicalHttpRequest = new CanonicalHttpServletRequest(request.method(),
                             request.url()
                                     .uri(),
                             getContextPath());
-                    return request.newBuilder()
-                            .addHeader(SyncTokenAuthenticator.SYNC_TOKEN_HEADER_NAME,
-                                    new SyncTokenBuilder().identifier(identifier)
-                                            .sharedSecret(sharedSecret)
-                                            .request(canonicalHttpRequest)
-                                            .generateToken())
-                            .build();
+                    Request.Builder builder = request.newBuilder();
+                    new SyncTokenBuilder().identifier(identifier)
+                            .sharedSecret(sharedSecret)
+                            .request(canonicalHttpRequest)
+                            .generateTokenAndAddHeaders(builder::addHeader);
+                    return builder.build();
                 })
                 .orElse(request);
     }

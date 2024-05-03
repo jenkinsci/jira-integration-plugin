@@ -1,28 +1,37 @@
 package org.marvelution.jji.listener;
 
-import javax.annotation.*;
-import java.net.*;
+import java.net.URI;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
-import org.marvelution.jji.*;
-import org.marvelution.jji.configuration.*;
-import org.marvelution.jji.synctoken.*;
-import org.marvelution.jji.synctoken.utils.*;
+import org.marvelution.jji.JiraUtils;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.synctoken.CanonicalHttpServletRequest;
+import org.marvelution.jji.synctoken.SyncTokenAuthenticator;
+import org.marvelution.jji.synctoken.utils.SharedSecretGenerator;
 
-import hudson.model.*;
-import hudson.util.*;
-import okhttp3.*;
-import okhttp3.mockwebserver.*;
-import org.assertj.core.api.*;
-import org.jenkinsci.plugins.plaincredentials.*;
-import org.junit.*;
-import org.junit.rules.*;
-import org.jvnet.hudson.test.*;
+import hudson.model.FreeStyleProject;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.util.Secret;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.QueueDispatcher;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
+import org.jvnet.hudson.test.JenkinsRule;
 
-import static java.util.Optional.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.*;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.marvelution.jji.Headers.SYNC_TOKEN;
 
 public class AbstractListenerTest
 {
@@ -72,11 +81,11 @@ public class AbstractListenerTest
             boolean postJson)
     {
         URI serverUri = jira.url("rest/jenkins/latest")
-                            .uri();
+                .uri();
         JiraSite site = new JiraSite(serverUri).withIdentifier(UUID.randomUUID()
-                                                                   .toString())
-                                               .withSharedSecret(SharedSecretGenerator.generate())
-                                               .withPostJson(postJson);
+                        .toString())
+                .withSharedSecret(SharedSecretGenerator.generate())
+                .withPostJson(postJson);
         name.ifPresent(site::withName);
         getJiraSitesConfiguration().registerSite(site);
     }
@@ -137,27 +146,26 @@ public class AbstractListenerTest
         List<RecordedRequest> requests = ((MemorizingQueueDispatcher) jira.getDispatcher()).findRequest(method, path);
 
         assertThat(requests).isNotEmpty()
-                            .allSatisfy(request -> {
-                                // verify token header on all matching requests
-                                assertThat(request).isNotNull()
-                                                   .extracting(RecordedRequest::getPath, RecordedRequest::getMethod)
-                                                   .containsOnly(path, method);
+                .allSatisfy(request -> {
+                    // verify token header on all matching requests
+                    assertThat(request).isNotNull()
+                            .extracting(RecordedRequest::getPath, RecordedRequest::getMethod)
+                            .containsOnly(path, method);
 
-                                assertThat(request).extracting(RecordedRequest::getHeaders)
-                                                   .extracting(Headers::names)
-                                                   .asInstanceOf(InstanceOfAssertFactories.iterable(String.class))
-                                                   .contains(SYNC_TOKEN_HEADER_NAME);
-                                String token = request.getHeader(SYNC_TOKEN_HEADER_NAME);
-                                new SyncTokenAuthenticator(issuer -> getJiraSitesConfiguration().findSite(issuer)
-                                                                                                .flatMap(JiraSite::getSharedSecretCredentials)
-                                                                                                .map(StringCredentials::getSecret)
-                                                                                                .map(Secret::getPlainText)).authenticate(
-                                        token,
-                                        new SimpleCanonicalHttpRequest(method,
-                                                request.getRequestUrl()
-                                                       .uri(),
-                                                empty()));
-                            });
+                    assertThat(request).extracting(RecordedRequest::getHeaders)
+                            .extracting(okhttp3.Headers::names)
+                            .asInstanceOf(InstanceOfAssertFactories.iterable(String.class))
+                            .contains(SYNC_TOKEN);
+                    String token = request.getHeader(SYNC_TOKEN);
+                    new SyncTokenAuthenticator(issuer -> getJiraSitesConfiguration().findSite(issuer)
+                            .flatMap(JiraSite::getSharedSecretCredentials)
+                            .map(StringCredentials::getSecret)
+                            .map(Secret::getPlainText)).authenticate(token,
+                            new CanonicalHttpServletRequest(method,
+                                    request.getRequestUrl()
+                                            .uri(),
+                                    empty()));
+                });
         return requests;
     }
 
@@ -174,7 +182,7 @@ public class AbstractListenerTest
     private JiraSitesConfiguration getJiraSitesConfiguration()
     {
         return (JiraSitesConfiguration) jenkins.getInstance()
-                                               .getDescriptor(JiraSitesConfiguration.class);
+                .getDescriptor(JiraSitesConfiguration.class);
     }
 
     private static class MemorizingQueueDispatcher
@@ -188,8 +196,8 @@ public class AbstractListenerTest
                 String path)
         {
             return requests.stream()
-                           .filter(request -> Objects.equals(method, request.getMethod()) && Objects.equals(path, request.getPath()))
-                           .collect(Collectors.toList());
+                    .filter(request -> Objects.equals(method, request.getMethod()) && Objects.equals(path, request.getPath()))
+                    .collect(Collectors.toList());
         }
 
         @Nonnull

@@ -1,17 +1,21 @@
 package org.marvelution.jji;
 
-import java.util.*;
+import java.util.Optional;
 
-import org.marvelution.jji.configuration.*;
-import org.marvelution.jji.rest.*;
-import org.marvelution.jji.synctoken.*;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.rest.HttpClientProvider;
+import org.marvelution.jji.rest.ObjectMapperProvider;
+import org.marvelution.jji.synctoken.CanonicalHttpServletRequest;
+import org.marvelution.jji.synctoken.SyncTokenBuilder;
 
-import com.fasterxml.jackson.databind.*;
-import okhttp3.*;
-import org.junit.*;
-import org.jvnet.hudson.test.*;
-
-import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.junit.Before;
+import org.junit.Rule;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 public abstract class AbstractTechnicalTest
 {
@@ -28,11 +32,11 @@ public abstract class AbstractTechnicalTest
     public void setUpCommonBits()
     {
         jenkins.getInstance()
-               .setSecurityRealm(jenkins.createDummySecurityRealm());
+                .setSecurityRealm(jenkins.createDummySecurityRealm());
         jenkins.getInstance()
-               .setAuthorizationStrategy(authorizationStrategy);
+                .setAuthorizationStrategy(authorizationStrategy);
         sitesConfiguration = jenkins.getInstance()
-                                    .getDescriptorByType(JiraSitesConfiguration.class);
+                .getDescriptorByType(JiraSitesConfiguration.class);
         httpClient = new HttpClientProvider().httpClient();
         objectMapper = new ObjectMapperProvider().objectMapper();
     }
@@ -40,9 +44,9 @@ public abstract class AbstractTechnicalTest
     protected void injectSite(JiraSite site)
     {
         sitesConfiguration.registerSite(new JiraSite(site.getUri()).withIdentifier(site.getIdentifier())
-                                                                   .withName(site.getName())
-                                                                   .withSharedSecret(site.getSharedSecret())
-                                                                   .withPostJson(site.isPostJson()));
+                .withName(site.getName())
+                .withSharedSecret(site.getSharedSecret())
+                .withPostJson(site.isPostJson()));
     }
 
     protected Request signTokenAuth(
@@ -59,17 +63,18 @@ public abstract class AbstractTechnicalTest
             String sharedSecret,
             String contextPath)
     {
-        SimpleCanonicalHttpRequest canonicalHttpRequest = new SimpleCanonicalHttpRequest(request.method(),
+        CanonicalHttpServletRequest canonicalHttpRequest = new CanonicalHttpServletRequest(request.method(),
                 request.url()
-                       .uri(),
+                        .uri(),
                 Optional.ofNullable(contextPath));
 
-        return request.newBuilder()
-                      .addHeader(SYNC_TOKEN_HEADER_NAME,
-                              new SyncTokenBuilder().identifier(identifier)
-                                                    .sharedSecret(sharedSecret)
-                                                    .request(canonicalHttpRequest)
-                                                    .generateToken())
-                      .build();
+        Request.Builder builder = request.newBuilder();
+
+        new SyncTokenBuilder().identifier(identifier)
+                .sharedSecret(sharedSecret)
+                .request(canonicalHttpRequest)
+                .generateTokenAndAddHeaders(builder::addHeader);
+
+        return builder.build();
     }
 }
