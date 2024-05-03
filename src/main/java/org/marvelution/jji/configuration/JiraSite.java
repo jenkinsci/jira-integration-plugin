@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.marvelution.jji.Headers;
 import org.marvelution.jji.JiraUtils;
 import org.marvelution.jji.events.JobNotificationType;
 import org.marvelution.jji.model.parsers.ParserProvider;
@@ -192,7 +191,9 @@ public class JiraSite
                 .build());
     }
 
-    public Request createNotifyJobRequest(Item item, JobNotificationType notificationType)
+    public Request createNotifyJobRequest(
+            Item item,
+            JobNotificationType notificationType)
     {
         return signRequest(new Request.Builder().url(getHttpUrl("integration/" + JiraUtils.getJobHash(item)))
                 .header(NOTIFICATION_TYPE, notificationType.value())
@@ -278,13 +279,12 @@ public class JiraSite
                             request.url()
                                     .uri(),
                             getContextPath());
-                    return request.newBuilder()
-                            .addHeader(Headers.SYNC_TOKEN,
-                                    new SyncTokenBuilder().identifier(identifier)
-                                            .sharedSecret(sharedSecret)
-                                            .request(canonicalHttpRequest)
-                                            .generateToken())
-                            .build();
+                    Request.Builder builder = request.newBuilder();
+                    new SyncTokenBuilder().identifier(identifier)
+                            .sharedSecret(sharedSecret)
+                            .request(canonicalHttpRequest)
+                            .generateTokenAndAddHeaders(builder::addHeader);
+                    return builder.build();
                 })
                 .orElse(request);
     }

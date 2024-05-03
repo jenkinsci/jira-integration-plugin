@@ -17,8 +17,6 @@ import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
-import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.OLD_SYNC_TOKEN_HEADER_NAME;
-
 public abstract class AbstractTechnicalTest
 {
 
@@ -70,12 +68,13 @@ public abstract class AbstractTechnicalTest
                         .uri(),
                 Optional.ofNullable(contextPath));
 
-        return request.newBuilder()
-                .addHeader(OLD_SYNC_TOKEN_HEADER_NAME,
-                        new SyncTokenBuilder().identifier(identifier)
-                                .sharedSecret(sharedSecret)
-                                .request(canonicalHttpRequest)
-                                .generateToken())
-                .build();
+        Request.Builder builder = request.newBuilder();
+
+        new SyncTokenBuilder().identifier(identifier)
+                .sharedSecret(sharedSecret)
+                .request(canonicalHttpRequest)
+                .generateTokenAndAddHeaders(builder::addHeader);
+
+        return builder.build();
     }
 }
