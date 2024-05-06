@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import org.marvelution.jji.*;
+import org.marvelution.jji.Headers;
 import org.marvelution.jji.configuration.*;
 import org.marvelution.jji.security.*;
 import org.marvelution.jji.tunnel.*;
@@ -167,6 +168,8 @@ public class JiraSiteManagement
             String token = req.getParameter("token");
 
             try (Response response = httpClient.newCall(new Request.Builder().get()
+                            .addHeader(Headers.SYNC_TOKEN, token)
+                            // Keep setting the old header for the time being
                             .addHeader(OLD_SYNC_TOKEN_HEADER_NAME, token)
                             .url(url)
                             .build())
