@@ -373,4 +373,15 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
+
+    <developers>
+        <developer>
+            <id>marvelution</id>
+            <name>Marvelution</name>
+            <email>support@marvelution.com</email>
+            <organization>Marvelution</organization>
+            <organizationUrl>https://marvelution.com</organizationUrl>
+            <timezone>CET</timezone>
+        </developer>
+    </developers>
 </project>
