@@ -347,14 +347,14 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
         <repository>
-            <id>marvelution-public</id>
+            <id>marvelution-releases</id>
             <url>https://packages.marvelution.com/maven/external-maven-releases/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
         </repository>
         <repository>
-            <id>marvelution-public</id>
+            <id>marvelution-snapshots</id>
             <url>https://packages.marvelution.com/maven/external-maven-snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
