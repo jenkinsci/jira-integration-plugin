@@ -42,7 +42,7 @@
 
         <filterModified>true</filterModified>
 
-        <jenkins.integration.common.version>1.58</jenkins.integration.common.version>
+        <jenkins.integration.common.version>1.60-SNAPSHOT</jenkins.integration.common.version>
         <jenkins.baseline>2.361</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <job-dsl.version>1.81</job-dsl.version>
@@ -143,7 +143,7 @@
         <dependency>
             <groupId>org.eclipse.parsson</groupId>
             <artifactId>parsson</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.5</version>
         </dependency>
 
         <dependency>
@@ -347,11 +347,15 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
         <repository>
-            <id>marvelution-public</id>
-            <url>https://marvelution.jfrog.io/artifactory/maven/</url>
+            <id>marvelution-releases</id>
+            <url>https://packages.marvelution.com/maven/external-maven-releases/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
+        </repository>
+        <repository>
+            <id>marvelution-snapshots</id>
+            <url>https://packages.marvelution.com/maven/external-maven-snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -361,16 +365,6 @@
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
             <url>https://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>marvelution-public</id>
-            <url>https://marvelution.jfrog.io/artifactory/maven/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
         </pluginRepository>
     </pluginRepositories>
 
