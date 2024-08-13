@@ -46,7 +46,7 @@ There are multiple [Jira](https://plugins.jenkins.io/ui/search?query=jira) plugi
 [official](https://marketplace.atlassian.com/apps/1227791/jenkins-for-jira-official?hosting=cloud&tab=overview) Jira plugin developed by
 Atlassian.
 
-Seee below on how this plugin differentiates with the [Jira](https://plugins.jenkins.io/jira/) and the
+See below on how this plugin differentiates with the [Jira](https://plugins.jenkins.io/jira/) and the
 [Atlassian Jira Software Cloud](https://plugins.jenkins.io/atlassian-jira-software-cloud/) plugins.
 
 ### [Jira](https://plugins.jenkins.io/jira/)
@@ -76,8 +76,9 @@ Cons
 
 - Only supports Jira Cloud.
 - Only supports Jenkins Multi branch pipeline jobs.
+- The integration needs to be configured manually in Jenkins by copy and pasting the secret and webhook, no (semi)automated method exists.
 - Automation rules are loosely coupled to Jenkins data. You need to copy&past Jenkins data like job name, to configure rules.
-- Requires a plugin in Jenkins and an app in Jira
+- Requires a plugin in Jenkins and an app in Jira.
 
 ### [Jira Integration](https://marketplace.atlassian.com/apps/1211376/jenkins-integration-for-jira?tab=overview&hosting=cloud)
 
@@ -92,7 +93,9 @@ Pros
   selecting jobs and builds instead on copying identifiers.
 - On Jira Cloud the app also provides automation through the Jira Automation rules just like the Atlassian Jira Software Cloud plugin.
 - Next to the custom integration, the app also integrates using the same APIs and the Atlassian Jira Software Cloud plugin.
-- Even inaccessible Jenkins instances are supported for by-directional integration. 
+- Even inaccessible Jenkins instances are supported for by-directional integration.
+- Integration in Jenkins can be done automatically, manually and by using Configuration as Code.
+- If installed on Jira Cloud, you can now also include Compass using the new [Jenkins for Compass](https://marketplace.atlassian.com/apps/1234756/jenkins-for-compass?tab=overview&hosting=cloud) app.
 
 Cons
 
