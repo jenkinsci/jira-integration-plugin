@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+
 import org.marvelution.jji.JiraUtils;
 import org.marvelution.jji.events.JobNotificationType;
 import org.marvelution.jji.model.parsers.ParserProvider;
@@ -24,6 +26,7 @@ import hudson.model.Run;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -42,11 +45,12 @@ public class JiraSite
 
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final long serialVersionUID = 1L;
-    private final URI uri;
+    private URI uri;
     private String identifier;
     private String sharedSecret;
     private String sharedSecretId;
     private String name;
+    private JSONObject context;
     private boolean postJson;
     private boolean tunneled;
 
@@ -124,6 +128,35 @@ public class JiraSite
         return this;
     }
 
+    public String getContextJson()
+    {
+        if (context != null)
+        {
+            return context.toString();
+        }
+        else
+        {
+            return "{}";
+        }
+    }
+
+    public JSONObject getContext()
+    {
+        return context;
+    }
+
+    @DataBoundSetter
+    public void setContext(JSONObject context)
+    {
+        this.context = context;
+    }
+
+    public JiraSite withContext(JSONObject context)
+    {
+        this.context = context;
+        return this;
+    }
+
     public boolean isPostJson()
     {
         return postJson;
@@ -180,6 +213,20 @@ public class JiraSite
         return signRequest(new Request.Builder().post(RequestBody.create("", JSON))
                 .url(getHttpUrl("integration/register/" + identifier))
                 .addHeader("Content-Length", "0")
+                .build());
+    }
+
+    public Request createGetRegisterDetailsRequest()
+    {
+        return signRequest(new Request.Builder().get()
+                .url(getHttpUrl("integration/register/" + identifier))
+                .build());
+    }
+
+    public Request createUnregisterRequest()
+    {
+        return signRequest(new Request.Builder().delete()
+                .url(getHttpUrl("integration/register/" + identifier))
                 .build());
     }
 
@@ -280,10 +327,14 @@ public class JiraSite
                                     .uri(),
                             getContextPath());
                     Request.Builder builder = request.newBuilder();
-                    new SyncTokenBuilder().identifier(identifier)
+                    SyncTokenBuilder syncTokenBuilder = new SyncTokenBuilder().identifier(identifier)
                             .sharedSecret(sharedSecret)
-                            .request(canonicalHttpRequest)
-                            .generateTokenAndAddHeaders(builder::addHeader);
+                            .request(canonicalHttpRequest);
+                    if (context != null && !context.isEmpty())
+                    {
+                        syncTokenBuilder.context(context);
+                    }
+                    syncTokenBuilder.generateTokenAndAddHeaders(builder::addHeader);
                     return builder.build();
                 })
                 .orElse(request);
@@ -346,11 +397,46 @@ public class JiraSite
         return "Jira site " + getName() + " at " + uri;
     }
 
+    public void updateSiteDetails(JSONObject details)
+    {
+        URI url = URI.create(details.getString("url"));
+        if (!uri.equals(url))
+        {
+            uri = url;
+        }
+        setName(details.getString("name"));
+        JSONObject context = details.optJSONObject("context");
+        if (context != null)
+        {
+            setContext(context);
+        }
+    }
+
+    public static JiraSite getSite(JSONObject details)
+    {
+        JiraSite site = new JiraSite(URI.create(details.getString("url"))).withIdentifier(details.getString("identifier"))
+                .withName(details.getString("name"))
+                .withSharedSecret(details.getString("sharedSecret"))
+                .withPostJson(details.optBoolean("firewalled", false))
+                .withTunneled(details.optBoolean("tunneled", false));
+        JSONObject context = details.optJSONObject("context");
+        if (context == null && details.has("contextJson"))
+        {
+            context = JSONObject.fromObject(details.getString("contextJson"));
+        }
+        if (context != null)
+        {
+            site.setContext(context);
+        }
+        return site;
+    }
+
     @Extension
     public static class Descriptor
             extends hudson.model.Descriptor<JiraSite>
     {
 
+        @Nonnull
         @Override
         public String getDisplayName()
         {

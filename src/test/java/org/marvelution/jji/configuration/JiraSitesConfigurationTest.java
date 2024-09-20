@@ -113,7 +113,7 @@ public class JiraSitesConfigurationTest
                                                                                                             .extracting(Secret::getPlainText)
                                                                                                             .isEqualTo(sharedSecret);
 
-        configuration.unregisterSite(uri);
+        configuration.unregisterSite(registeredSite.get());
 
         assertThat(configuration.findSite("site-1")).isEmpty();
         credentials = CredentialsProvider.lookupCredentials(StringCredentials.class,

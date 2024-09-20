@@ -1,36 +1,45 @@
 package org.marvelution.jji.management;
 
-import javax.annotation.*;
-import javax.inject.*;
-import javax.servlet.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.logging.*;
+import java.io.IOException;
+import java.net.URI;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.servlet.ServletException;
 
-import org.marvelution.jji.*;
 import org.marvelution.jji.Headers;
-import org.marvelution.jji.configuration.*;
-import org.marvelution.jji.security.*;
-import org.marvelution.jji.tunnel.*;
+import org.marvelution.jji.JiraIntegrationPlugin;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.security.SyncTokenSecurityContext;
+import org.marvelution.jji.tunnel.TunnelManager;
 
-import com.fasterxml.jackson.databind.*;
-import hudson.*;
-import hudson.model.*;
-import jenkins.model.*;
-import net.sf.json.*;
-import okhttp3.*;
+import hudson.Extension;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.ManagementLink;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.kohsuke.stapler.*;
-import org.kohsuke.stapler.bind.*;
-import org.kohsuke.stapler.interceptor.*;
-import org.springframework.security.access.*;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.springframework.security.access.AccessDeniedException;
 
-import static java.util.Comparator.*;
-import static java.util.stream.Collectors.*;
-import static org.marvelution.jji.JiraUtils.*;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toCollection;
+import static org.marvelution.jji.JiraUtils.getJsonFromRequest;
 import static org.marvelution.jji.Messages.*;
-import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.*;
+import static org.marvelution.jji.synctoken.SyncTokenAuthenticator.OLD_SYNC_TOKEN_HEADER_NAME;
 
 @Extension(ordinal = Integer.MAX_VALUE - 500)
 public class JiraSiteManagement
@@ -42,7 +51,6 @@ public class JiraSiteManagement
     private JiraSitesConfiguration sitesConfiguration;
     private TunnelManager tunnelManager;
     private OkHttpClient httpClient;
-    private ObjectMapper objectMapper;
     private JiraSite site;
 
     @Inject
@@ -61,12 +69,6 @@ public class JiraSiteManagement
     public void setHttpClient(OkHttpClient httpClient)
     {
         this.httpClient = httpClient;
-    }
-
-    @Inject
-    public void setObjectMapper(ObjectMapper objectMapper)
-    {
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -118,7 +120,26 @@ public class JiraSiteManagement
     @JavaScriptMethod
     public void deleteSite(String uri)
     {
-        sitesConfiguration.unregisterSite(URI.create(uri));
+        sitesConfiguration.findSite(URI.create(uri))
+                .ifPresent(site -> {
+                    try (Response response = httpClient.newCall(site.createUnregisterRequest())
+                            .execute())
+                    {
+                        if (response.isSuccessful())
+                        {
+                            LOGGER.info("Successfully unregistered site: " + site);
+                            sitesConfiguration.unregisterSite(site);
+                        }
+                        else
+                        {
+                            throw HttpResponses.errorWithoutStack(500, site_unregister_failed());
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw HttpResponses.errorWithoutStack(500, site_unregister_failed());
+                    }
+                });
     }
 
     @JavaScriptMethod
@@ -181,19 +202,9 @@ public class JiraSiteManagement
                     {
                         if (body != null)
                         {
-                            JsonNode details = objectMapper.readTree(body.bytes());
+                            JSONObject details = JSONObject.fromObject(body.string());
 
-                            site = new JiraSite(URI.create(details.get("url")
-                                    .asText())).withIdentifier(details.get("identifier")
-                                            .asText())
-                                    .withName(details.get("name")
-                                            .asText())
-                                    .withSharedSecret(details.get("sharedSecret")
-                                            .asText())
-                                    .withPostJson(details.get("firewalled")
-                                            .asBoolean())
-                                    .withTunneled(details.get("tunneled")
-                                            .asBoolean());
+                            site = JiraSite.getSite(details);
 
                             req.getView(this, "add")
                                     .forward(req, rsp);
@@ -230,11 +241,7 @@ public class JiraSiteManagement
         JSONObject form = req.getSubmittedForm();
         try
         {
-            JiraSite site = new JiraSite(URI.create(form.getString("url"))).withIdentifier(form.getString("identifier"))
-                    .withName(form.getString("name"))
-                    .withSharedSecret(form.getString("sharedSecret"))
-                    .withPostJson(form.getBoolean("firewalled"))
-                    .withTunneled(form.getBoolean("tunneled"));
+            JiraSite site = JiraSite.getSite(form);
 
             try (Response response = httpClient.newCall(site.createRegisterRequest())
                     .execute())
@@ -269,24 +276,19 @@ public class JiraSiteManagement
                 .checkPermission(Jenkins.ADMINISTER);
 
         JSONObject data = getJsonFromRequest(request);
-        JiraSite jiraSite = new JiraSite(URI.create(data.getString("url"))).withName(data.getString("name"))
-                .withIdentifier(data.getString("identifier"))
-                .withSharedSecret(data.getString("sharedSecret"))
-                .withPostJson(data.optBoolean("firewalled", false));
+        JiraSite jiraSite = JiraSite.getSite(data);
 
         JiraSite existingSite = securityContext.getSite();
         if (existingSite != null && Objects.equals(jiraSite.getIdentifier(), existingSite.getIdentifier()) &&
             Objects.equals(jiraSite.getSharedSecret(), existingSite.getSharedSecret()))
         {
-            JiraSitesConfiguration.get()
-                    .registerSite(jiraSite);
+            sitesConfiguration.registerSite(jiraSite);
         }
         else if (Objects.equals(jiraSite.getIdentifier(),
                 securityContext.getClaimsSet()
                         .getIssuer()))
         {
-            JiraSitesConfiguration.get()
-                    .registerSite(jiraSite);
+            sitesConfiguration.registerSite(jiraSite);
         }
         else
         {
@@ -300,7 +302,31 @@ public class JiraSiteManagement
             throws IOException
     {
         SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
-        JiraSitesConfiguration.get()
-                .unregisterSite(URI.create(getJsonFromRequest(request).getString("url")));
+        URI url = URI.create(getJsonFromRequest(request).getString("url"));
+        sitesConfiguration.findSite(url)
+                .ifPresent(sitesConfiguration::unregisterSite);
+    }
+
+    @Initializer(after = InitMilestone.JOB_CONFIG_ADAPTED)
+    public void updateSiteRegistrations()
+    {
+        for (JiraSite site : sitesConfiguration.getSites())
+        {
+            try (Response response = httpClient.newCall(site.createGetRegisterDetailsRequest())
+                    .execute();
+                 ResponseBody body = response.body())
+            {
+                if (response.isSuccessful() && body != null)
+                {
+                    JSONObject details = JSONObject.fromObject(body.string());
+                    site.updateSiteDetails(details);
+                }
+            }
+            catch (Exception e)
+            {
+                LOGGER.log(Level.SEVERE, "Failed to update " + site, e);
+            }
+        }
+        sitesConfiguration.save();
     }
 }

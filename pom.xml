@@ -121,13 +121,8 @@
         <dependency>
             <groupId>org.marvelution.jji.components</groupId>
             <artifactId>sync-token</artifactId>
-            <classifier>springless</classifier>
             <version>${jenkins.integration.common.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.atlassian.connect</groupId>
-                    <artifactId>atlassian-connect-spring-boot-jwt</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>org.springframework.security</groupId>
                     <artifactId>spring-security-oauth2-jose</artifactId>

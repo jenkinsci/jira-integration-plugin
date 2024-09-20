@@ -28,6 +28,9 @@
                         <f:invisibleEntry>
                             <f:textbox field="tunneled" value="${it.site.tunneled}"/>
                         </f:invisibleEntry>
+                        <f:invisibleEntry>
+                            <f:textbox field="contextJson" value="${it.site.getContextJson()}"/>
+                        </f:invisibleEntry>
                         <f:entry title="${%site.name}" field="name">
                             <f:textbox value="${it.site.name}"/>
                         </f:entry>
