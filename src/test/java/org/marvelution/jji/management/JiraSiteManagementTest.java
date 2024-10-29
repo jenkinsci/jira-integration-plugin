@@ -1,18 +1,22 @@
 package org.marvelution.jji.management;
 
-import java.net.*;
-import java.util.*;
-import java.util.function.*;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.UnaryOperator;
 
-import org.marvelution.jji.*;
-import org.marvelution.jji.configuration.*;
-import org.marvelution.jji.synctoken.utils.*;
+import org.marvelution.jji.AbstractTechnicalTest;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.synctoken.utils.SharedSecretGenerator;
 
+import net.sf.json.JSONObject;
 import okhttp3.*;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
-import static jenkins.model.Jenkins.*;
-import static org.assertj.core.api.Assertions.*;
+import static jenkins.model.Jenkins.ADMINISTER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JiraSiteManagementTest
         extends AbstractTechnicalTest
@@ -24,7 +28,8 @@ public class JiraSiteManagementTest
     {
         jiraSite = new JiraSite(URI.create("http://localhost:2990/jira/rest/jenkins/latest")).withName("Local Jira")
                 .withIdentifier("identifier")
-                .withSharedSecret(SharedSecretGenerator.generate());
+                .withSharedSecret(SharedSecretGenerator.generate())
+                .withContext(new JSONObject().element("test", "field"));
     }
 
     @Test
@@ -39,7 +44,9 @@ public class JiraSiteManagementTest
         {
             assertThat(response.isSuccessful()).isTrue();
             assertThat(sitesConfiguration.getSites()).hasSize(1)
-                    .containsOnly(jiraSite);
+                    .containsOnly(jiraSite)
+                    .extracting(JiraSite::getContext)
+                    .containsOnly(new JSONObject().element("test", "field"));
         }
     }
 
@@ -166,6 +173,10 @@ public class JiraSiteManagementTest
         site.put("identifier", jiraSite.getIdentifier());
         site.put("sharedSecret", jiraSite.getSharedSecret());
         site.put("firewalled", jiraSite.isPostJson());
+        if (jiraSite.getContext() != null)
+        {
+            site.put("context", jiraSite.getContext());
+        }
         return doAction("register", site, requestCustomizer);
     }
 

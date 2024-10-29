@@ -1,28 +1,34 @@
 package org.marvelution.jji.configuration;
 
-import javax.annotation.*;
-import javax.inject.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.*;
-import java.util.stream.*;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
-import com.cloudbees.plugins.credentials.*;
-import com.fasterxml.jackson.databind.*;
-import hudson.*;
-import hudson.init.*;
-import hudson.security.*;
-import hudson.util.*;
-import jenkins.model.*;
-import net.sf.json.*;
-import okhttp3.*;
-import org.apache.commons.lang3.*;
-import org.jenkinsci.*;
-import org.jenkinsci.plugins.plaincredentials.*;
-import org.jenkinsci.plugins.plaincredentials.impl.*;
-import org.kohsuke.stapler.*;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import hudson.Extension;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
+import hudson.util.Secret;
+import jenkins.model.GlobalConfiguration;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.StaplerRequest;
 
 @Symbol(JiraSitesConfiguration.ID)
 @Extension
@@ -37,12 +43,6 @@ public class JiraSitesConfiguration
     public JiraSitesConfiguration()
     {
         load();
-    }
-
-    public static JiraSitesConfiguration get()
-    {
-        return (JiraSitesConfiguration) Jenkins.get()
-                .getDescriptorOrDie(JiraSitesConfiguration.class);
     }
 
     @Override
@@ -110,14 +110,12 @@ public class JiraSitesConfiguration
         updateSharedSecretCredentials(existing, newSite);
     }
 
-    public void unregisterSite(URI uri)
+    public void unregisterSite(JiraSite site)
     {
-        getExistingSite(uri).ifPresent(site -> {
-            removeSharedSecretCredentials(site);
-            sites.remove(site);
-            save();
-            LOGGER.log(Level.INFO, "Unregistered Jira Site at: {0}", uri);
-        });
+        removeSharedSecretCredentials(site);
+        sites.remove(site);
+        save();
+        LOGGER.log(Level.INFO, "Unregistered Jira Site at: {0}", site.getUri());
     }
 
     private void storeSharedSecretAsCredentials(JiraSite site)
@@ -238,5 +236,11 @@ public class JiraSitesConfiguration
                 LOGGER.log(Level.WARNING, "Failed to save " + getConfigFile(), e);
             }
         }
+    }
+
+    public static JiraSitesConfiguration get()
+    {
+        return (JiraSitesConfiguration) Jenkins.get()
+                .getDescriptorOrDie(JiraSitesConfiguration.class);
     }
 }
