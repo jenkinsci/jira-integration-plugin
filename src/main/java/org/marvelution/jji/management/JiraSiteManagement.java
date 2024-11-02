@@ -128,17 +128,17 @@ public class JiraSiteManagement
                         if (response.isSuccessful())
                         {
                             LOGGER.info("Successfully unregistered site: " + site);
-                            sitesConfiguration.unregisterSite(site);
                         }
                         else
                         {
-                            throw HttpResponses.errorWithoutStack(500, site_unregister_failed());
+                            LOGGER.warning("Unable to unregistered site: " + site + ": Site responded with status " + response.code());
                         }
                     }
                     catch (Exception e)
                     {
-                        throw HttpResponses.errorWithoutStack(500, site_unregister_failed());
+                        LOGGER.log(Level.SEVERE, "Failed to unregistered site: " + site, e);
                     }
+                    sitesConfiguration.unregisterSite(site);
                 });
     }
 
