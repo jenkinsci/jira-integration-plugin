@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
@@ -28,7 +29,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 @Symbol(JiraSitesConfiguration.ID)
 @Extension
@@ -47,7 +48,7 @@ public class JiraSitesConfiguration
 
     @Override
     public boolean configure(
-            StaplerRequest req,
+            StaplerRequest2 req,
             JSONObject json)
     {
         return true;
@@ -120,7 +121,7 @@ public class JiraSitesConfiguration
 
     private void storeSharedSecretAsCredentials(JiraSite site)
     {
-        StringCredentials credentials = createSharedSecretCredentials(site);
+        StringCredentials credentials = createSharedSecretCredentials(site, null);
         try (ACLContext ignored = ACL.as2(ACL.SYSTEM2))
         {
             new SystemCredentialsProvider.StoreImpl().addDomain(site.getDomain(), credentials);
@@ -143,7 +144,7 @@ public class JiraSitesConfiguration
                     .ifPresent(credentials -> {
                         try (ACLContext ignored = ACL.as2(ACL.SYSTEM2))
                         {
-                            StringCredentials newCredentials = createSharedSecretCredentials(site);
+                            StringCredentials newCredentials = createSharedSecretCredentials(site, credentials.getId());
                             new SystemCredentialsProvider.StoreImpl().updateCredentials(existing.getDomain(), credentials, newCredentials);
                             existing.setSharedSecretId(newCredentials.getId());
                             existing.setSharedSecret(null);
@@ -182,12 +183,11 @@ public class JiraSitesConfiguration
     }
 
     @Nonnull
-    private StringCredentials createSharedSecretCredentials(JiraSite site)
+    private StringCredentials createSharedSecretCredentials(JiraSite site, @Nullable String id)
     {
         String description = String.format("Jira Integration (%s) auto generated shared secret credentials", site.getName());
         return new StringCredentialsImpl(CredentialsScope.GLOBAL,
-                UUID.randomUUID()
-                        .toString(),
+                id != null ? id : UUID.randomUUID().toString(),
                 description,
                 Secret.fromString(site.getSharedSecret()));
     }

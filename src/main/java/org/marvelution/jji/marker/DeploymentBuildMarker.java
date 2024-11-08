@@ -138,7 +138,7 @@ public class DeploymentBuildMarker
 
 		@Override
 		public Publisher newInstance(
-				StaplerRequest req,
+				StaplerRequest2 req,
 				JSONObject formData)
 		{
 			return req.bindJSON(DeploymentBuildMarker.class, formData);

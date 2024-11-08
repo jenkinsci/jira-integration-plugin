@@ -6,6 +6,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.logging.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.marvelution.jji.*;
 import org.marvelution.jji.configuration.*;
 
@@ -37,6 +38,7 @@ public class NgrokConnector
         this.details = details;
     }
 
+    @SuppressFBWarnings(value = "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", justification = "TODO needs triage")
     public void verifyTunnelToken(
             String tunnelId,
             String tunnelToken)

@@ -1,6 +1,6 @@
 package org.marvelution.jji.sync;
 
-import javax.servlet.*;
+import jakarta.servlet.*;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
@@ -69,8 +69,8 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
 
     @RequirePOST
     public synchronized void doSubmit(
-            StaplerRequest request,
-            StaplerResponse response)
+            StaplerRequest2 request,
+            StaplerResponse2 response)
             throws IOException, ServletException
     {
         target.getACL()
@@ -111,8 +111,8 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
     }
 
     private void generateResponse(
-            StaplerRequest request,
-            StaplerResponse response,
+            StaplerRequest2 request,
+            StaplerResponse2 response,
             String message,
             String type)
             throws IOException, ServletException

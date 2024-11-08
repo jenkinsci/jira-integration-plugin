@@ -2,7 +2,7 @@ package org.marvelution.jji.tunnel;
 
 import javax.annotation.*;
 import javax.inject.*;
-import javax.servlet.*;
+import jakarta.servlet.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
