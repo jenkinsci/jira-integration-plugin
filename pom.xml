@@ -42,7 +42,7 @@
 
         <filterModified>true</filterModified>
 
-        <jenkins.integration.common.version>1.62-SNAPSHOT</jenkins.integration.common.version>
+        <jenkins.integration.common.version>1.62</jenkins.integration.common.version>
         <jenkins.baseline>2.361</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <job-dsl.version>1.81</job-dsl.version>
