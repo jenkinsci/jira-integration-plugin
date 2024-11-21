@@ -7,7 +7,6 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
         <version>5.2</version>
-        <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>jira-integration</artifactId>
@@ -35,7 +34,7 @@
     <properties>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
 
-        <revision>5.4.0</revision>
+        <revision>5.5.0</revision>
         <changelist>999999-SNAPSHOT</changelist>
 
         <filterModified>true</filterModified>
