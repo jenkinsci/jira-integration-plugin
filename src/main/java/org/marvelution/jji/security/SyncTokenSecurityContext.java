@@ -1,6 +1,6 @@
 package org.marvelution.jji.security;
 
-import javax.servlet.http.*;
+import jakarta.servlet.http.*;
 
 import org.marvelution.jji.configuration.*;
 

@@ -3,11 +3,11 @@ package org.marvelution.jji.security;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
@@ -22,6 +22,7 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.util.PluginServletFilter;
 import hudson.util.Secret;
+import io.jenkins.servlet.http.HttpServletRequestWrapper;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContext;
@@ -84,7 +85,7 @@ public class SyncTokenAuthenticationFilter
     {
         try
         {
-            JWTClaimsSet claimsSet = tokenAuthenticator.authenticate(new SyncTokenRequest(request));
+            JWTClaimsSet claimsSet = tokenAuthenticator.authenticate(new SyncTokenRequest(HttpServletRequestWrapper.fromJakartaHttpServletRequest(request)));
             LOGGER.log(Level.FINE, "Authenticated {0} through Sync Token.", claimsSet.getIssuer());
             JiraSite site = sitesConfiguration.findSite(claimsSet.getIssuer())
                     .orElseThrow(() -> new IllegalStateException("Authenticated by sync-token but unable to find a Jira site for it."));

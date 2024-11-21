@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.marvelution.jji.security.SyncTokenSecurityContext;
 
@@ -15,8 +15,8 @@ import hudson.model.*;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import static org.marvelution.jji.JiraUtils.getJsonFromRequest;
@@ -58,8 +58,8 @@ public class JiraBuildTriggerAction<JobT extends Job<JobT, ?> & Queue.Task>
     @RequirePOST
     @SuppressWarnings("lgtm[jenkins/no-permission-check]")
     public void doBuild(
-            StaplerRequest request,
-            StaplerResponse response)
+            StaplerRequest2 request,
+            StaplerResponse2 response)
             throws IOException
     {
         SyncTokenSecurityContext.checkSyncTokenAuthentication(request);

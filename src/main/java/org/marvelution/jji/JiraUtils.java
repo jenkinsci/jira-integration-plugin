@@ -37,7 +37,7 @@ public class JiraUtils
 		return sha1Hex(url);
 	}
 
-	public static JSONObject getJsonFromRequest(StaplerRequest request)
+	public static JSONObject getJsonFromRequest(StaplerRequest2 request)
 			throws IOException
 	{
 		return JSONObject.fromObject(IOUtils.toString(request.getReader()));

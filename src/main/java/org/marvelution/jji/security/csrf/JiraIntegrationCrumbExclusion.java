@@ -1,8 +1,8 @@
 package org.marvelution.jji.security.csrf;
 
 import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 import org.marvelution.jji.management.*;
 

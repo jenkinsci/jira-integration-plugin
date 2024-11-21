@@ -1,8 +1,8 @@
 package org.marvelution.jji;
 
-import javax.servlet.Filter;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.Filter;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import java.io.*;
 import java.util.logging.*;
 

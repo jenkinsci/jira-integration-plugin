@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.marvelution.jji.Headers;
 import org.marvelution.jji.JiraIntegrationPlugin;
@@ -29,8 +29,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.kohsuke.stapler.HttpResponses;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.springframework.security.access.AccessDeniedException;
@@ -175,8 +175,8 @@ public class JiraSiteManagement
     }
 
     public void doIndex(
-            StaplerRequest req,
-            StaplerResponse rsp)
+            StaplerRequest2 req,
+            StaplerResponse2 rsp)
             throws IOException, ServletException
     {
         Jenkins.get()
@@ -231,8 +231,8 @@ public class JiraSiteManagement
 
     @RequirePOST
     public synchronized void doSubmit(
-            StaplerRequest req,
-            StaplerResponse rsp)
+            StaplerRequest2 req,
+            StaplerResponse2 rsp)
             throws IOException, ServletException
     {
         Jenkins.get()
@@ -267,7 +267,7 @@ public class JiraSiteManagement
     }
 
     @RequirePOST
-    public void doRegister(StaplerRequest request)
+    public void doRegister(StaplerRequest2 request)
             throws IOException
     {
         SyncTokenSecurityContext securityContext = SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
@@ -298,7 +298,7 @@ public class JiraSiteManagement
 
     @RequirePOST
     @SuppressWarnings("lgtm[jenkins/no-permission-check]")
-    public void doUnregister(StaplerRequest request)
+    public void doUnregister(StaplerRequest2 request)
             throws IOException
     {
         SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
