@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 
 import org.marvelution.jji.Headers;
 import org.marvelution.jji.JiraIntegrationPlugin;
+import org.marvelution.jji.Messages;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 import org.marvelution.jji.security.SyncTokenSecurityContext;
@@ -28,7 +29,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -155,10 +155,10 @@ public class JiraSiteManagement
                     }
                     catch (Exception e)
                     {
-                        throw HttpResponses.errorWithoutStack(500, site_get_url_failed());
+                        return site_get_url_failed();
                     }
                 })
-                .orElseThrow(() -> HttpResponses.errorWithoutStack(404, site_not_found()));
+                .orElseGet(Messages::site_not_found);
     }
 
     @JavaScriptMethod
