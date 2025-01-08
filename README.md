@@ -20,17 +20,17 @@ The integration offers support:
 - You're an administrator of your Jira instance/site and can install, update and delete apps.
 - You're an administrator of your Jenkins server and can install, update and delete plugins.
 - Your team as part of there development or deployment practices add issue keys to jobs and/or builds in Jenkins.
-  See [Linking builds to issue](https://docs.marvelution.com/jji/cloud/data-synchronization/#linking-builds-to-issues) where the app
+  See [Linking builds to issue](https://docs.marvelution.com/jenkins-for-jira/cloud/data-synchronization/#linking-builds-to-issues) where the app
   searches for issue keys.
 
 ## Getting Started
 
-Refer to the getting started [guide](https://docs.marvelution.com/jji/cloud/) or [video](https://youtu.be/KxlVIJlQ4To) to integrate your
+Refer to the getting started [guide](https://docs.marvelution.com/jenkins-for-jira/cloud/) or [video](https://youtu.be/KxlVIJlQ4To) to integrate your
 Jenkins server with Jira.
 
 ## Support
 
-Read all about the integration between Jenkins and Jira in the [Marvelution docs](https://docs.marvelution.com/jji/).
+Read all about the integration between Jenkins and Jira in the [Marvelution docs](https://docs.marvelution.com/jenkins-for-jira/).
 
 If you are having trouble with this plugin, please reach out to [Marvelution support](https://getsupport.marvelution.com/).
 
