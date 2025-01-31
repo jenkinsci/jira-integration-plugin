@@ -20,15 +20,11 @@ import org.marvelution.jji.security.SyncTokenSecurityContext;
 import org.marvelution.jji.tunnel.TunnelManager;
 
 import hudson.Extension;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.ManagementLink;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -188,39 +184,99 @@ public class JiraSiteManagement
             String url = req.getParameter("url");
             String token = req.getParameter("token");
 
-            try (Response response = httpClient.newCall(new Request.Builder().get()
-                            .addHeader(Headers.SYNC_TOKEN, token)
-                            // Keep setting the old header for the time being
-                            .addHeader(OLD_SYNC_TOKEN_HEADER_NAME, token)
-                            .url(url)
-                            .build())
-                    .execute())
+            try
             {
-                if (response.isSuccessful())
-                {
-                    try (ResponseBody body = response.body())
-                    {
-                        if (body != null)
-                        {
-                            JSONObject details = JSONObject.fromObject(body.string());
-
-                            site = JiraSite.getSite(details);
-
-                            req.getView(this, "add")
-                                    .forward(req, rsp);
-                        }
-                    }
-                }
-                else
-                {
-                    req.setAttribute("error", "Unable to get registration details; " + response.code() + "[" + response.message() + "]");
-                }
+                registerSiteForm(req, rsp, token, url);
+            }
+            catch (Exception e)
+            {
+                req.setAttribute("error", e.getMessage());
+                req.getView(this, "index")
+                        .forward(req, rsp);
             }
         }
         else
         {
             req.getView(this, "index")
                     .forward(req, rsp);
+        }
+    }
+
+    @RequirePOST
+    public synchronized void doAdd(
+            StaplerRequest2 req,
+            StaplerResponse2 rsp)
+            throws IOException, ServletException
+    {
+        Jenkins.get()
+                .getACL()
+                .checkPermission(Jenkins.ADMINISTER);
+        JSONObject form = req.getSubmittedForm();
+
+        try
+        {
+            if (!form.containsKey("url"))
+            {
+                throw new IllegalArgumentException("Missing url");
+            }
+            String urlParam = form.getString("url");
+            HttpUrl httpUrl = HttpUrl.parse(urlParam);
+            if (httpUrl == null)
+            {
+                throw new IllegalArgumentException("Invalid URL " + urlParam);
+            }
+            String url = Objects.requireNonNull(httpUrl.queryParameter("url"), "Missing url parameter");
+            String token = Objects.requireNonNull(httpUrl.queryParameter("token"), "Missing token parameter");
+
+            registerSiteForm(req, rsp, token, url);
+        }
+        catch (Exception e)
+        {
+            req.setAttribute("error", e.getMessage());
+            req.getView(this, "manual")
+                    .forward(req, rsp);
+        }
+    }
+
+    private void registerSiteForm(
+            StaplerRequest2 req,
+            StaplerResponse2 rsp,
+            String token,
+            String url)
+            throws IOException, ServletException
+    {
+        try (Response response = httpClient.newCall(new Request.Builder().get()
+                        .addHeader(Headers.SYNC_TOKEN, token)
+                        // Keep setting the old header for the time being
+                        .addHeader(OLD_SYNC_TOKEN_HEADER_NAME, token)
+                        .url(url)
+                        .build())
+                .execute())
+        {
+            if (response.isSuccessful())
+            {
+                try (ResponseBody body = response.body())
+                {
+                    if (body != null)
+                    {
+                        JSONObject details = JSONObject.fromObject(body.string());
+
+                        site = JiraSite.getSite(details);
+
+                        req.getView(this, "add")
+                                .forward(req, rsp);
+                    }
+                }
+                catch (JSONException e)
+                {
+                    throw new IllegalArgumentException("Invalid JSON response: " + e.getMessage());
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException(
+                        "Unable to get registration details; " + response.code() + "[" + response.message() + "]");
+            }
         }
     }
 
@@ -267,6 +323,21 @@ public class JiraSiteManagement
     }
 
     @RequirePOST
+    public synchronized void doRefresh(
+            StaplerRequest2 req,
+            StaplerResponse2 rsp)
+            throws IOException, ServletException
+    {
+        Jenkins.get()
+                .getACL()
+                .checkPermission(Jenkins.ADMINISTER);
+
+        sitesConfiguration.updateSiteRegistrations(httpClient);
+
+        rsp.sendRedirect(".");
+    }
+
+    @RequirePOST
     public void doRegister(StaplerRequest2 request)
             throws IOException
     {
@@ -305,28 +376,5 @@ public class JiraSiteManagement
         URI url = URI.create(getJsonFromRequest(request).getString("url"));
         sitesConfiguration.findSite(url)
                 .ifPresent(sitesConfiguration::unregisterSite);
-    }
-
-    @Initializer(after = InitMilestone.JOB_CONFIG_ADAPTED)
-    public void updateSiteRegistrations()
-    {
-        for (JiraSite site : sitesConfiguration.getSites())
-        {
-            try (Response response = httpClient.newCall(site.createGetRegisterDetailsRequest())
-                    .execute();
-                 ResponseBody body = response.body())
-            {
-                if (response.isSuccessful() && body != null)
-                {
-                    JSONObject details = JSONObject.fromObject(body.string());
-                    site.updateSiteDetails(details);
-                }
-            }
-            catch (Exception e)
-            {
-                LOGGER.log(Level.SEVERE, "Failed to update " + site, e);
-            }
-        }
-        sitesConfiguration.save();
     }
 }

@@ -1,5 +1,6 @@
 package org.marvelution.jji.configuration;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Arrays;
@@ -7,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 
 import org.marvelution.jji.JiraUtils;
@@ -44,6 +44,7 @@ public class JiraSite
 {
 
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    @Serial
     private static final long serialVersionUID = 1L;
     private URI uri;
     private String identifier;
@@ -53,6 +54,7 @@ public class JiraSite
     private JSONObject context;
     private boolean postJson;
     private boolean tunneled;
+    private boolean enabled = true;
 
     @DataBoundConstructor
     public JiraSite(URI uri)
@@ -189,6 +191,27 @@ public class JiraSite
     {
         this.tunneled = tunneled;
         return this;
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    @DataBoundSetter
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
+    }
+
+    public void disable()
+    {
+        setEnabled(false);
+    }
+
+    public void enable()
+    {
+        setEnabled(true);
     }
 
     public Request createGetBaseUrlRequest()

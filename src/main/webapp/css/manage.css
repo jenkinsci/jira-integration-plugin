@@ -7,10 +7,16 @@ ul.legend li {
 	display: inline-block;
 	padding: 5px;
 }
-ul.legend li img {
+ul.legend li svg {
 	position: relative;
 	left: 0;
+	vertical-align: text-top;
 }
 .error pre {
 	max-width: calc(80vw);
+}
+
+#sites svg {
+	width: 16px;
+	height: 16px;
 }

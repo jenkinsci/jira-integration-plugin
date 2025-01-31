@@ -364,6 +364,7 @@ public class SitesClient
             Consumer<JiraSite> action)
     {
         sitesConfiguration.stream()
+                .filter(JiraSite::isEnabled)
                 .filter(filter)
                 .forEach(action);
     }

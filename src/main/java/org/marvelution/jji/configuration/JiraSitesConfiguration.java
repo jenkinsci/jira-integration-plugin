@@ -24,6 +24,9 @@ import hudson.util.Secret;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -31,8 +34,8 @@ import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
-@Symbol(JiraSitesConfiguration.ID)
 @Extension
+@Symbol(JiraSitesConfiguration.ID)
 public class JiraSitesConfiguration
         extends GlobalConfiguration
 {
@@ -183,11 +186,15 @@ public class JiraSitesConfiguration
     }
 
     @Nonnull
-    private StringCredentials createSharedSecretCredentials(JiraSite site, @Nullable String id)
+    private StringCredentials createSharedSecretCredentials(
+            JiraSite site,
+            @Nullable
+            String id)
     {
         String description = String.format("Jira Integration (%s) auto generated shared secret credentials", site.getName());
         return new StringCredentialsImpl(CredentialsScope.GLOBAL,
-                id != null ? id : UUID.randomUUID().toString(),
+                id != null ? id : UUID.randomUUID()
+                        .toString(),
                 description,
                 Secret.fromString(site.getSharedSecret()));
     }
@@ -236,6 +243,40 @@ public class JiraSitesConfiguration
                 LOGGER.log(Level.WARNING, "Failed to save " + getConfigFile(), e);
             }
         }
+    }
+
+    public void updateSiteRegistrations(OkHttpClient httpClient)
+    {
+        for (JiraSite site : getSites())
+        {
+            try (Response response = httpClient.newCall(site.createGetRegisterDetailsRequest())
+                    .execute();
+                 ResponseBody body = response.body())
+            {
+                LOGGER.log(Level.INFO, "Checking " + site);
+                if (response.isSuccessful() && body != null)
+                {
+                    JSONObject details = JSONObject.fromObject(body.string());
+                    LOGGER.log(Level.INFO, "Updating {0}", site);
+                    site.enable();
+                    site.updateSiteDetails(details);
+                }
+                else if (response.code() == 402)
+                {
+                    LOGGER.log(Level.INFO, "Disabling " + site + " as payment is required");
+                    site.disable();
+                }
+                else
+                {
+                    LOGGER.log(Level.SEVERE, "Unable to update " + site + "; " + response.code());
+                }
+            }
+            catch (Exception e)
+            {
+                LOGGER.log(Level.SEVERE, "Failed to update " + site, e);
+            }
+        }
+        save();
     }
 
     public static JiraSitesConfiguration get()

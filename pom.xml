@@ -46,6 +46,9 @@
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
+
+        <!-- Override to support Java 23 -->
+        <spotbugs-maven-plugin.version>4.8.6.6</spotbugs-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
