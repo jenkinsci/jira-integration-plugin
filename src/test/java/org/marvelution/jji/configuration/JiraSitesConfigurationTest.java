@@ -5,6 +5,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.marvelution.jji.synctoken.utils.*;
 
 import com.cloudbees.plugins.credentials.*;
@@ -15,21 +16,20 @@ import hudson.util.*;
 import jenkins.model.*;
 import org.assertj.core.groups.*;
 import org.jenkinsci.plugins.plaincredentials.*;
-import org.junit.*;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.*;
 import org.jvnet.hudson.test.recipes.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.marvelution.jji.configuration.JiraSitesConfiguration.*;
 
-public class JiraSitesConfigurationTest
+@WithJenkins
+class JiraSitesConfigurationTest
 {
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
 
     @Test
     @LocalData
-    public void testMigrateSharedSecretAsCredentials()
+    void testMigrateSharedSecretAsCredentials(JenkinsRule jenkins)
             throws IOException
     {
         URL resource = getClass().getResource(getClass().getSimpleName() + "/" + jenkins.getTestDescription()
@@ -41,7 +41,7 @@ public class JiraSitesConfigurationTest
                                        .map(site -> tuple(site.getName(), site.getSharedSecret()))
                                        .toArray(Tuple[]::new);
 
-        JiraSitesConfiguration config = getJiraSitesConfiguration();
+        JiraSitesConfiguration config = getJiraSitesConfiguration(jenkins);
 
         assertThat(config.getSites()).hasSize(2)
                                      .allSatisfy(site -> {
@@ -59,11 +59,11 @@ public class JiraSitesConfigurationTest
     }
 
     @Test
-    public void testRegisterSiteStoresSharedSecretAsCredential()
+    void testRegisterSiteStoresSharedSecretAsCredential(JenkinsRule jenkins)
     {
         String sharedSecret = SharedSecretGenerator.generate();
 
-        JiraSitesConfiguration configuration = getJiraSitesConfiguration();
+        JiraSitesConfiguration configuration = getJiraSitesConfiguration(jenkins);
 
         configuration.registerSite(new JiraSite(URI.create("http://jira.local/rest/jenkins/latest")).withName("Jira")
                                                                                                     .withIdentifier("site-1")
@@ -84,9 +84,9 @@ public class JiraSitesConfigurationTest
     }
 
     @Test
-    public void testUnRegisterSiteRemovedSharedSecretCredential()
+    void testUnRegisterSiteRemovedSharedSecretCredential(JenkinsRule jenkins)
     {
-        JiraSitesConfiguration configuration = getJiraSitesConfiguration();
+        JiraSitesConfiguration configuration = getJiraSitesConfiguration(jenkins);
 
         String sharedSecret = SharedSecretGenerator.generate();
         configuration.registerSite(new JiraSite(URI.create("http://jira.local/rest/jenkins/latest")).withName("Jira")
@@ -104,9 +104,9 @@ public class JiraSitesConfigurationTest
         String sharedSecretId = registeredSite.get()
                                               .getSharedSecretId();
 
-        List<StringCredentials> credentials = CredentialsProvider.lookupCredentials(StringCredentials.class,
+        List<StringCredentials> credentials = CredentialsProvider.lookupCredentialsInItemGroup(StringCredentials.class,
                 Jenkins.get(),
-                ACL.SYSTEM,
+                ACL.SYSTEM2,
                 List.of(new SchemeRequirement(uri.getScheme()), new HostnameRequirement(uri.getHost())));
         assertThat(CredentialsMatchers.firstOrNull(credentials, CredentialsMatchers.withId(sharedSecretId))).isNotNull()
                                                                                                             .extracting(StringCredentials::getSecret)
@@ -116,19 +116,19 @@ public class JiraSitesConfigurationTest
         configuration.unregisterSite(registeredSite.get());
 
         assertThat(configuration.findSite("site-1")).isEmpty();
-        credentials = CredentialsProvider.lookupCredentials(StringCredentials.class,
+        credentials = CredentialsProvider.lookupCredentialsInItemGroup(StringCredentials.class,
                 Jenkins.get(),
-                ACL.SYSTEM,
+                ACL.SYSTEM2,
                 List.of(new SchemeRequirement(uri.getScheme()), new HostnameRequirement(uri.getHost())));
         assertThat(CredentialsMatchers.firstOrNull(credentials, CredentialsMatchers.withId(sharedSecretId))).isNull();
     }
 
     @Test
-    public void testRegisterUpdatedSiteUpdatesSharedSecretCredential()
+    void testRegisterUpdatedSiteUpdatesSharedSecretCredential(JenkinsRule jenkins)
     {
         String sharedSecret = SharedSecretGenerator.generate();
 
-        JiraSitesConfiguration configuration = getJiraSitesConfiguration();
+        JiraSitesConfiguration configuration = getJiraSitesConfiguration(jenkins);
 
         configuration.registerSite(new JiraSite(URI.create("http://jira.local/rest/jenkins/latest")).withName("Jira")
                                                                                                     .withIdentifier("site-1")
@@ -169,7 +169,7 @@ public class JiraSitesConfigurationTest
     }
 
     @Nonnull
-    private JiraSitesConfiguration getJiraSitesConfiguration()
+    private JiraSitesConfiguration getJiraSitesConfiguration(JenkinsRule jenkins)
     {
         return (JiraSitesConfiguration) jenkins.getInstance()
                                                .getDescriptorOrDie(JiraSitesConfiguration.class);

@@ -2,23 +2,22 @@ package org.marvelution.jji.casc;
 
 import java.net.*;
 
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import org.marvelution.jji.configuration.*;
 
 import io.jenkins.plugins.casc.misc.*;
 import org.assertj.core.api.*;
-import org.junit.*;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class ConfigurationAsCodeTest
+@WithJenkinsConfiguredWithCode
+class ConfigurationAsCodeTest
 {
-
-    @Rule
-    public JenkinsConfiguredWithCodeRule jenkins = new JenkinsConfiguredWithCodeRule();
 
     @Test
     @ConfiguredWithCode("configuration-as-code.yml")
-    public void testSupportConfigurationAsCode()
+    void testSupportConfigurationAsCode(JenkinsConfiguredWithCodeRule jenkins)
     {
         JiraSitesConfiguration sitesConfiguration = (JiraSitesConfiguration) jenkins.getInstance()
                                                                                     .getDescriptorOrDie(JiraSitesConfiguration.class);

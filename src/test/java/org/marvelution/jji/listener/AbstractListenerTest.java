@@ -2,9 +2,9 @@ package org.marvelution.jji.listener;
 
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.marvelution.jji.JiraUtils;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
@@ -22,10 +22,8 @@ import okhttp3.mockwebserver.QueueDispatcher;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static java.util.Optional.empty;
@@ -33,21 +31,22 @@ import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.marvelution.jji.Headers.SYNC_TOKEN;
 
-public class AbstractListenerTest
+@WithJenkins
+class AbstractListenerTest
 {
     static final String REST_BASE_PATH = "/rest/jenkins/latest/integration/";
-    @Rule
-    public TestName testName = new TestName();
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+
+    protected JenkinsRule jenkins;
     protected MockWebServer jira;
     protected MockWebServer jira2;
     FreeStyleProject project;
 
-    @Before
-    public void setup()
+    @BeforeEach
+    void setup(JenkinsRule jenkins)
             throws Exception
     {
+        this.jenkins = jenkins;
+
         jira = new MockWebServer();
         jira.setDispatcher(new MemorizingQueueDispatcher());
         jira.start();
@@ -60,8 +59,8 @@ public class AbstractListenerTest
         registerJiraSite(jira2, of("Jira 2"), true);
     }
 
-    @After
-    public void tearDown()
+    @AfterEach
+    void tearDown()
             throws Exception
     {
         jira.shutdown();
@@ -197,7 +196,7 @@ public class AbstractListenerTest
         {
             return requests.stream()
                     .filter(request -> Objects.equals(method, request.getMethod()) && Objects.equals(path, request.getPath()))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         @Nonnull
