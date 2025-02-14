@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 
 import hudson.Extension;
-import hudson.Main;
 import hudson.model.AsyncPeriodicWork;
 import hudson.model.TaskListener;
 import okhttp3.OkHttpClient;
@@ -48,7 +47,7 @@ public class DailyCheck
     @Override
     public long getInitialDelay()
     {
-        return Main.isUnitTest ? 10 * MIN : 0;
+        return 0;
     }
 
     @Override

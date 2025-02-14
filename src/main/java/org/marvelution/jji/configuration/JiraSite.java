@@ -51,10 +51,12 @@ public class JiraSite
     private String sharedSecret;
     private String sharedSecretId;
     private String name;
-    private JSONObject context;
+    private String contextJson;
+    private transient JSONObject context;
     private boolean postJson;
     private boolean tunneled;
-    private boolean enabled = true;
+    private int lastStatus = 200;
+    private boolean upToDate = true;
 
     @DataBoundConstructor
     public JiraSite(URI uri)
@@ -142,20 +144,27 @@ public class JiraSite
         }
     }
 
+    @DataBoundSetter
+    public void setContextJson(String contextJson)
+    {
+        this.contextJson = contextJson;
+        this.context = JSONObject.fromObject(contextJson);
+    }
+
     public JSONObject getContext()
     {
         return context;
     }
 
-    @DataBoundSetter
     public void setContext(JSONObject context)
     {
         this.context = context;
+        this.contextJson = getContextJson();
     }
 
     public JiraSite withContext(JSONObject context)
     {
-        this.context = context;
+        setContext(context);
         return this;
     }
 
@@ -195,23 +204,30 @@ public class JiraSite
 
     public boolean isEnabled()
     {
-        return enabled;
+        int family = lastStatus / 100;
+        return family == 2 || family == 3;
+    }
+
+    public int getLastStatus()
+    {
+        return lastStatus;
     }
 
     @DataBoundSetter
-    public void setEnabled(boolean enabled)
+    public void setLastStatus(int lastStatus)
     {
-        this.enabled = enabled;
+        this.lastStatus = lastStatus;
     }
 
-    public void disable()
+    public boolean isUpToDate()
     {
-        setEnabled(false);
+        return upToDate;
     }
 
-    public void enable()
+    @DataBoundSetter
+    public void setUpToDate(boolean upToDate)
     {
-        setEnabled(true);
+        this.upToDate = upToDate;
     }
 
     public Request createGetBaseUrlRequest()

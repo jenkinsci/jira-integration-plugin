@@ -254,17 +254,29 @@ public class JiraSitesConfiguration
                  ResponseBody body = response.body())
             {
                 LOGGER.log(Level.INFO, "Checking " + site);
+                site.setLastStatus(response.code());
+                Optional.ofNullable(response.header("X-Registration-Status", "0"))
+                        .map(header -> {
+                            try
+                            {
+                                return Integer.parseInt(header);
+                            }
+                            catch (NumberFormatException e)
+                            {
+                                LOGGER.log(Level.FINE, "Unexpected value returned for X-Registration-Status", e);
+                                return 0;
+                            }
+                        })
+                        .ifPresent(status -> site.setUpToDate(status == 0));
                 if (response.isSuccessful() && body != null)
                 {
                     JSONObject details = JSONObject.fromObject(body.string());
                     LOGGER.log(Level.INFO, "Updating {0}", site);
-                    site.enable();
                     site.updateSiteDetails(details);
                 }
                 else if (response.code() == 402)
                 {
                     LOGGER.log(Level.INFO, "Disabling " + site + " as payment is required");
-                    site.disable();
                 }
                 else
                 {
@@ -274,6 +286,7 @@ public class JiraSitesConfiguration
             catch (Exception e)
             {
                 LOGGER.log(Level.SEVERE, "Failed to update " + site, e);
+                site.setLastStatus(-1);
             }
         }
         save();

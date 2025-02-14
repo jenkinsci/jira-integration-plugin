@@ -37,6 +37,9 @@
                                         <j:if test="${site.enabled == false}">
                                             <l:icon src="icon-disabled" class="icon-sm" tooltip="${%site.disabled}"/>
                                         </j:if>
+                                        <j:if test="${site.upToDate == false}">
+                                            <l:icon src="icon-up" class="icon-sm" tooltip="${%site.out.of.date}"/>
+                                        </j:if>
                                     </td>
                                     <td>
                                         ${site.uri}
