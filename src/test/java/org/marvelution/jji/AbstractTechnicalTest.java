@@ -2,6 +2,7 @@ package org.marvelution.jji;
 
 import java.util.Optional;
 
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 import org.marvelution.jji.rest.HttpClientProvider;
@@ -12,25 +13,27 @@ import org.marvelution.jji.synctoken.SyncTokenBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
+@WithJenkins
 public abstract class AbstractTechnicalTest
 {
 
     public static final String ALICE = "alice";
     protected final MockAuthorizationStrategy authorizationStrategy = new MockAuthorizationStrategy();
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+
+    protected JenkinsRule jenkins;
     protected JiraSitesConfiguration sitesConfiguration;
     protected OkHttpClient httpClient;
     protected ObjectMapper objectMapper;
 
-    @Before
-    public void setUpCommonBits()
+    @BeforeEach
+    void setUp(JenkinsRule jenkins)
     {
+        this.jenkins = jenkins;
+
         jenkins.getInstance()
                 .setSecurityRealm(jenkins.createDummySecurityRealm());
         jenkins.getInstance()

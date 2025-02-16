@@ -12,19 +12,19 @@ import org.marvelution.jji.synctoken.utils.SharedSecretGenerator;
 
 import net.sf.json.JSONObject;
 import okhttp3.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jenkins.model.Jenkins.ADMINISTER;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JiraSiteManagementTest
+class JiraSiteManagementTest
         extends AbstractTechnicalTest
 {
     private JiraSite jiraSite;
 
-    @Before
-    public void setUp()
+    @BeforeEach
+    void setUp()
     {
         jiraSite = new JiraSite(URI.create("http://localhost:2990/jira/rest/jenkins/latest")).withName("Local Jira")
                 .withIdentifier("identifier")
@@ -33,7 +33,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testRegisterJiraSite()
+    void testRegisterJiraSite()
             throws Exception
     {
         authorizationStrategy.grant(ADMINISTER)
@@ -51,7 +51,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testRegisterJiraSite_NoAdmin()
+    void testRegisterJiraSite_NoAdmin()
             throws Exception
     {
         try (Response response = registerJiraSite(jiraSite, Credentials.basic(ALICE, ALICE)))
@@ -62,7 +62,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testRegisterJiraSite_NoBasicAuth()
+    void testRegisterJiraSite_NoBasicAuth()
             throws Exception
     {
         try (Response response = registerJiraSite(jiraSite, (String) null))
@@ -73,7 +73,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testRegisterJiraSite_Update()
+    void testRegisterJiraSite_Update()
             throws Exception
     {
         injectSite(jiraSite);
@@ -87,7 +87,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testRegisterJiraSite_AccessDenied()
+    void testRegisterJiraSite_AccessDenied()
             throws Exception
     {
         try (Response response = registerJiraSite(jiraSite, request -> request.addHeader("Authorization", Credentials.basic(ALICE, ALICE))))
@@ -98,7 +98,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testUnregisterJiraSite()
+    void testUnregisterJiraSite()
             throws Exception
     {
         injectSite(jiraSite);
@@ -111,7 +111,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testUnregisterJiraSite_UnknownJiraSite()
+    void testUnregisterJiraSite_UnknownJiraSite()
             throws Exception
     {
         JiraSite site = new JiraSite(URI.create("http://localhost:8080/jira/rest/jenkins/latest")).withName("Local Jira")
@@ -128,7 +128,7 @@ public class JiraSiteManagementTest
     }
 
     @Test
-    public void testUnregisterJiraSite_AccessDenied()
+    void testUnregisterJiraSite_AccessDenied()
             throws Exception
     {
         JiraSite site = new JiraSite(URI.create("http://localhost:8080/jira/rest/jenkins/latest")).withName("Local Jira")

@@ -4,15 +4,17 @@ import java.util.concurrent.*;
 
 import hudson.model.*;
 import okhttp3.mockwebserver.*;
-import org.junit.*;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class RunSaveListenerTest
+@WithJenkins
+class RunSaveListenerTest
         extends AbstractListenerTest
 {
     @Test
-    public void testOnChange()
+    void testOnChange()
             throws Exception
     {
 

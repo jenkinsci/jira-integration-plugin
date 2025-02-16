@@ -5,15 +5,17 @@ import java.io.*;
 import hudson.model.*;
 import net.sf.json.*;
 import okhttp3.mockwebserver.*;
-import org.junit.*;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class JobListenerTest
+@WithJenkins
+class JobListenerTest
         extends AbstractListenerTest
 {
     @Test
-    public void testCreate()
+    void testCreate()
             throws IOException
     {
         fixedResponse(jira, new MockResponse().setResponseCode(202));
@@ -37,7 +39,7 @@ public class JobListenerTest
     }
 
     @Test
-    public void testModify()
+    void testModify()
             throws IOException
     {
         fixedResponse(jira, new MockResponse().setResponseCode(202));
@@ -60,7 +62,7 @@ public class JobListenerTest
     }
 
     @Test
-    public void testDelete()
+    void testDelete()
             throws Exception
     {
         jira.enqueue(new MockResponse().setResponseCode(204));

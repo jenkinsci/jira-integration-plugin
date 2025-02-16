@@ -2,26 +2,27 @@ package org.marvelution.jji.security;
 
 import java.net.*;
 
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.marvelution.jji.*;
 import org.marvelution.jji.configuration.*;
 import org.marvelution.jji.synctoken.utils.*;
 
 import hudson.model.*;
 import okhttp3.*;
-import org.junit.*;
-import org.jvnet.hudson.test.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jenkins.model.Jenkins.*;
 import static org.assertj.core.api.Assertions.*;
 
-public class SyncTokenAuthenticationFilterTest
+@WithJenkins
+class SyncTokenAuthenticationFilterTest
         extends AbstractTechnicalTest
 {
-    private JiraSitesConfiguration sitesConfiguration;
     private JiraSite site;
 
-    @Before
-    public void setUp()
+    @BeforeEach
+    void setUp()
     {
         site = new JiraSite(URI.create("https://jira.example.com")).withIdentifier("jira")
                                                                    .withName("Jira")
@@ -30,7 +31,7 @@ public class SyncTokenAuthenticationFilterTest
     }
 
     @Test
-    public void testAccessViaSyncToken()
+    void testAccessViaSyncToken()
             throws Exception
     {
         authorizationStrategy.grant(ADMINISTER)
@@ -56,7 +57,7 @@ public class SyncTokenAuthenticationFilterTest
     }
 
     @Test
-    public void testNoSyncTokenAccessToAPI()
+    void testNoSyncTokenAccessToAPI()
             throws Exception
     {
         authorizationStrategy.grant(ADMINISTER)

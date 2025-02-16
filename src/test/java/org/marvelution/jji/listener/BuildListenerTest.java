@@ -2,22 +2,24 @@ package org.marvelution.jji.listener;
 
 import java.util.concurrent.*;
 
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.marvelution.jji.*;
 import org.marvelution.jji.model.parsers.*;
 
 import hudson.model.*;
 import okhttp3.mockwebserver.*;
-import org.junit.*;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.marvelution.jji.JiraUtils.*;
 
-public class BuildListenerTest
+@WithJenkins
+class BuildListenerTest
         extends AbstractListenerTest
 {
     @Test
-    public void testNotifyAndDelete()
+    void testNotifyAndDelete()
             throws Exception
     {
         jira.enqueue(new MockResponse().setResponseCode(500));
@@ -42,7 +44,7 @@ public class BuildListenerTest
     }
 
     @Test
-    public void testNotify_WithParents()
+    void testNotify_WithParents()
             throws Exception
     {
         jira.enqueue(new MockResponse().setResponseCode(202));
@@ -81,7 +83,7 @@ public class BuildListenerTest
     }
 
     @Test
-    public void testNotify_WithData()
+    void testNotify_WithData()
             throws Exception
     {
         jira.enqueue(new MockResponse().setResponseCode(202));
