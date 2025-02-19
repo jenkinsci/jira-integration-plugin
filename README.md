@@ -11,9 +11,9 @@ The integration offers support:
   made accessible through a secure tunnel. (Only available in the Jira Cloud app) 
 
 > :warning: This plugin does need
-> the [Jenkins Integration for Jira](https://marketplace.atlassian.com/apps/1211376/jenkins-integration-for-jira?tab=overview&hosting=cloud)
+> the [Jenkins for Jira](https://marketplace.atlassian.com/apps/1211376/jenkins-for-jira?tab=overview&hosting=cloud)
 > app to be installed in for Jira instance which is not a free app. Go to **Apps > Manage Apps** in Jira, search for "Jenkins
-> Integration for Jira" and install the app. After the app is installed it will help you integrate your Jenkins server with Jira.
+> for Jira" and install the app. After the app is installed it will help you integrate your Jenkins server with Jira.
 
 ## Prerequisites
 
@@ -80,7 +80,7 @@ Cons
 - Automation rules are loosely coupled to Jenkins data. You need to copy&past Jenkins data like job name, to configure rules.
 - Requires a plugin in Jenkins and an app in Jira.
 
-### [Jira Integration](https://marketplace.atlassian.com/apps/1211376/jenkins-integration-for-jira?tab=overview&hosting=cloud)
+### [Jira Integration](https://marketplace.atlassian.com/apps/1211376/jenkins-for-jira?tab=overview&hosting=cloud)
 
 Pros
 
