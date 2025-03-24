@@ -309,7 +309,7 @@
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
                     <pluginFirstClassLoader>true</pluginFirstClassLoader>
-                    <defaultPort>8081</defaultPort>
+                    <defaultPort>8080</defaultPort>
                     <webApp>
                         <contextPath>/</contextPath>
                     </webApp>
