@@ -49,6 +49,8 @@
 
         <!-- Override to support Java 23 -->
         <spotbugs-maven-plugin.version>4.8.6.6</spotbugs-maven-plugin.version>
+
+        <jenkins.home>${project.basedir}/work</jenkins.home>
     </properties>
 
     <dependencyManagement>
@@ -310,6 +312,7 @@
                 <configuration>
                     <pluginFirstClassLoader>true</pluginFirstClassLoader>
                     <defaultPort>8080</defaultPort>
+                    <jenkinsHome>${jenkins.home}</jenkinsHome>
                     <webApp>
                         <contextPath>/</contextPath>
                     </webApp>
