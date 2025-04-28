@@ -4,10 +4,10 @@ This plugin integrates Jenkins with [Jira](https://www.atlassian.com/jira) on Se
 
 The integration offers support:
 
-* An **Inaccessible** Jenkins site, meaning the Jenkins instance is not accessible by the Jira app. Either because of a firewall or other
+* A **Unidirectional** connection, meaning the Jenkins instance is not accessible by the Jira app. Either because of a firewall or other
   network limitations.
-* An **Accessible** Jenkins site, meaning the Jenkins instance is accessible by the Jira app for data synchronization.
-* An **Accessible through Tunneling** Jenkins site, meaning the Jenkins instance is not accessible directly by the Jira app, but can be 
+* A **Bidirectional** connection, meaning the Jenkins instance is accessible by the Jira app for data synchronization.
+* A **Tunnelled** connection, meaning the Jenkins instance is not accessible directly by the Jira app, but can be 
   made accessible through a secure tunnel. (Only available in the Jira Cloud app) 
 
 > :warning: This plugin does need
@@ -93,9 +93,11 @@ Pros
   selecting jobs and builds instead on copying identifiers.
 - On Jira Cloud the app also provides automation through the Jira Automation rules just like the Atlassian Jira Software Cloud plugin.
 - Next to the custom integration, the app also integrates using the same APIs and the Atlassian Jira Software Cloud plugin.
-- Even inaccessible Jenkins instances are supported for by-directional integration.
+- Even Jenkins instances that are not internet facing are supported for by-directional integration.
 - Integration in Jenkins can be done automatically, manually and by using Configuration as Code.
-- If installed on Jira Cloud, you can now also include Compass using the new [Jenkins for Compass](https://marketplace.atlassian.com/apps/1234756/jenkins-for-compass?tab=overview&hosting=cloud) app.
+- If installed on Jira Cloud, you can now also include 
+  [Compass](https://marketplace.atlassian.com/apps/1234756/jenkins-for-compass?hosting=cloud&tab=overview) and 
+  [Confluence](https://marketplace.atlassian.com/apps/1236248?tab=overview&hosting=cloud).
 
 Cons
 
