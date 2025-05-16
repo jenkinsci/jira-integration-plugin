@@ -37,7 +37,7 @@
         <documentation.url>https://github.com/${git.repo.slug}</documentation.url>
         <git.repo.slug>jenkinsci/jira-integration-plugin</git.repo.slug>
 
-        <revision>5.4.0</revision>
+        <revision>5.4.1</revision>
         <changelist>999999-SNAPSHOT</changelist>
 
         <filterModified>true</filterModified>
