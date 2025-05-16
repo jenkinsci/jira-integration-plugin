@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 
 import org.marvelution.jji.JiraUtils;
@@ -50,9 +49,12 @@ public class JiraSite
     private String sharedSecret;
     private String sharedSecretId;
     private String name;
-    private JSONObject context;
+    private String contextJson;
+    private transient JSONObject context;
     private boolean postJson;
     private boolean tunneled;
+    private int lastStatus = 200;
+    private boolean upToDate = true;
 
     @DataBoundConstructor
     public JiraSite(URI uri)
@@ -140,20 +142,27 @@ public class JiraSite
         }
     }
 
+    @DataBoundSetter
+    public void setContextJson(String contextJson)
+    {
+        this.contextJson = contextJson;
+        this.context = JSONObject.fromObject(contextJson);
+    }
+
     public JSONObject getContext()
     {
         return context;
     }
 
-    @DataBoundSetter
     public void setContext(JSONObject context)
     {
         this.context = context;
+        this.contextJson = getContextJson();
     }
 
     public JiraSite withContext(JSONObject context)
     {
-        this.context = context;
+        setContext(context);
         return this;
     }
 
@@ -189,6 +198,34 @@ public class JiraSite
     {
         this.tunneled = tunneled;
         return this;
+    }
+
+    public boolean isEnabled()
+    {
+        int family = lastStatus / 100;
+        return family == 2 || family == 3;
+    }
+
+    public int getLastStatus()
+    {
+        return lastStatus;
+    }
+
+    @DataBoundSetter
+    public void setLastStatus(int lastStatus)
+    {
+        this.lastStatus = lastStatus;
+    }
+
+    public boolean isUpToDate()
+    {
+        return upToDate;
+    }
+
+    @DataBoundSetter
+    public void setUpToDate(boolean upToDate)
+    {
+        this.upToDate = upToDate;
     }
 
     public Request createGetBaseUrlRequest()

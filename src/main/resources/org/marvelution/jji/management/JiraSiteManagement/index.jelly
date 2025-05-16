@@ -1,9 +1,19 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
     <l:layout permission="${app.ADMINISTER}" title="${%title}" norefresh="true" type="one-column">
         <l:main-panel>
             <link rel="stylesheet" type="text/css" href="${resURL}/plugin/jira-integration/css/manage.css"/>
-            <h1>${%title}</h1>
+            <l:app-bar title="${%title}">
+                <l:isAdmin>
+                    <a href="manual" class="jenkins-button">
+                        <l:icon src="symbol-add"/>
+                        ${%add.site}
+                    </a>
+                    <f:form method="post" name="jji" action="refresh">
+                        <f:submit primary="false" value="${%refresh.sites}"/>
+                    </f:form>
+                </l:isAdmin>
+            </l:app-bar>
             <j:choose>
                 <j:when test="${empty(it.sites)}">
                     <p>
@@ -22,7 +32,15 @@
                         <tbody>
                             <j:forEach var="site" items="${it.sites}">
                                 <tr data-site-uri="${site.uri}">
-                                    <td>${site.name}</td>
+                                    <td>
+                                        ${site.name}
+                                        <j:if test="${site.enabled == false}">
+                                            <l:icon src="icon-disabled" class="icon-sm" tooltip="${%site.disabled}"/>
+                                        </j:if>
+                                        <j:if test="${site.upToDate == false}">
+                                            <l:icon src="icon-up" class="icon-sm" tooltip="${%site.out.of.date}"/>
+                                        </j:if>
+                                    </td>
                                     <td>
                                         ${site.uri}
                                         <j:set var="connectionError" value="${it.getSiteConnectionError(site.identifier)}"/>
@@ -35,7 +53,7 @@
                                     <td>
                                         <j:if test="${site.tunneled}">
                                             <a href="#" class="refresh-tunnel">
-                                                <l:icon src="symbol-redo" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
+                                                <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
                                             </a>
                                         </j:if>
                                         <a href="#" class="navigate-to-site">
@@ -51,7 +69,7 @@
                     </table>
                     <ul class="legend">
                         <li>
-                            <l:icon src="symbol-redo" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
+                            <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
                             ${%refresh.site.tunnel}
                         </li>
                         <li>

@@ -1,0 +1,30 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+    <l:layout permission="${app.ADMINISTER}" title="${%title}" norefresh="true" type="one-column">
+        <l:main-panel>
+            <link rel="stylesheet" type="text/css" href="${resURL}/plugin/jira-integration/css/manage.css"/>
+            <h1>${%title}</h1>
+            <p>${%description}</p>
+            <div>
+                <f:form method="post" name="jji" action="add">
+                    <j:if test="${!empty(error)}">
+                        <f:block>
+                            <div class="error">
+                                <p>${%error.registering.site}</p>
+                                <pre>${error}</pre>
+                            </div>
+                        </f:block>
+                    </j:if>
+                    <f:block>
+                        <f:entry title="${%registration.url}" field="url">
+                            <f:textbox/>
+                        </f:entry>
+                    </f:block>
+                    <f:block>
+                        <f:submit value="${%add.site}"/>
+                    </f:block>
+                </f:form>
+            </div>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

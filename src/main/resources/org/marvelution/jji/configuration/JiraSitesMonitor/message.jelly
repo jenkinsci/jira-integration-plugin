@@ -1,0 +1,16 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <div class="jenkins-alert jenkins-alert-warning">
+        <f:form method="post" name="jji" action="${it.url}/forward">
+            <f:submit primary="true" value="${%go.to.sites}"/>
+        </f:form>
+        ${%JiraSitesRequiresAttention}
+        <dl>
+            <j:forEach var="site" items="${it.getSites()}">
+                <dt>${site.name}</dt>
+                <dd>${it.describe(site)}</dd>
+            </j:forEach>
+        </dl>
+        <p>${%JiraSitesRequiresAttentionDescription}</p>
+    </div>
+</j:jelly>
