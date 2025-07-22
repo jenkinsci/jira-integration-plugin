@@ -3,24 +3,28 @@
     <l:layout permission="${app.ADMINISTER}" title="${%title}" norefresh="true" type="one-column">
         <l:main-panel>
             <link rel="stylesheet" type="text/css" href="${resURL}/plugin/jira-integration/css/manage.css"/>
-            <l:app-bar title="${%title}">
-                <l:isAdmin>
-                    <a href="manual" class="jenkins-button">
-                        <l:icon src="symbol-add"/>
-                        ${%add.site}
-                    </a>
-                    <f:form method="post" name="jji" action="refresh">
-                        <f:submit primary="false" value="${%refresh.sites}"/>
-                    </f:form>
-                </l:isAdmin>
-            </l:app-bar>
+            <div class="jenkins-app-bar">
+                <div class="jenkins-app-bar__content">
+                    <h1>${%title}</h1>
+                </div>
+                <l:hasAdministerOrManage>
+                    <div class="jenkins-app-bar__controls">
+                        <a href="manual" class="jenkins-button">
+                            <l:icon src="symbol-add"/>
+                            ${%add.site}
+                        </a>
+                        <j:choose>
+                            <j:when test="${it.hasSites()}">
+                                <f:form method="post" name="jji" action="refresh">
+                                    <f:submit primary="false" value="${%refresh.sites}"/>
+                                </f:form>
+                            </j:when>
+                        </j:choose>
+                    </div>
+                </l:hasAdministerOrManage>
+            </div>
             <j:choose>
-                <j:when test="${empty(it.sites)}">
-                    <p>
-                        <b>${%no.sites}</b>
-                    </p>
-                </j:when>
-                <j:otherwise>
+                <j:when test="${it.hasSites()}">
                     <table id="sites" class="jenkins-table sortable jenkins-!-margin-bottom-0">
                         <thead>
                             <tr>
@@ -83,6 +87,11 @@
                     </ul>
                     <st:bind var="JJI" value="${it}"/>
                     <st:adjunct includes="org.marvelution.jji.management.actions"/>
+                </j:when>
+                <j:otherwise>
+                    <p>
+                        <b>${%no.sites}</b>
+                    </p>
                 </j:otherwise>
             </j:choose>
         </l:main-panel>

@@ -1,12 +1,5 @@
 package org.marvelution.jji.configuration;
 
-import java.io.Serializable;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import org.marvelution.jji.JiraUtils;
@@ -24,6 +17,13 @@ import hudson.model.Item;
 import hudson.model.Run;
 import hudson.security.ACL;
 import hudson.util.Secret;
+import java.io.Serializable;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import okhttp3.HttpUrl;
@@ -138,7 +138,7 @@ public class JiraSite
         }
         else
         {
-            return "{}";
+            return Objects.requireNonNullElse(contextJson, "{}");
         }
     }
 
