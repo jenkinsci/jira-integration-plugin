@@ -1,12 +1,5 @@
 package org.marvelution.jji.management;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import jakarta.servlet.ServletException;
@@ -21,6 +14,13 @@ import org.marvelution.jji.tunnel.TunnelManager;
 
 import hudson.Extension;
 import hudson.model.ManagementLink;
+import java.io.IOException;
+import java.net.URI;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -95,6 +95,12 @@ public class JiraSiteManagement
     public String getDisplayName()
     {
         return manage_display_name();
+    }
+
+    public boolean hasSites()
+    {
+        return !sitesConfiguration.getSites()
+                .isEmpty();
     }
 
     public Set<JiraSite> getSites()
