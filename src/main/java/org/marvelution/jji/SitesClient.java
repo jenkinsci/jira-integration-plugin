@@ -1,18 +1,7 @@
 package org.marvelution.jji;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
@@ -28,6 +17,18 @@ import hudson.security.ACL;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
 import hudson.util.NamingThreadFactory;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.security.ImpersonatingExecutorService;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -45,13 +46,13 @@ public class SitesClient
             new ImpersonatingExecutorService(Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),
                     "JiraSync"))), ACL.SYSTEM2);
     private final JiraSitesConfiguration sitesConfiguration;
-    private final OkHttpClient httpClient;
+    private final Provider<OkHttpClient> httpClient;
     private final ObjectMapper objectMapper;
 
     @Inject
     public SitesClient(
             JiraSitesConfiguration sitesConfiguration,
-            OkHttpClient httpClient,
+            Provider<OkHttpClient> httpClient,
             ObjectMapper objectMapper)
     {
         this.sitesConfiguration = sitesConfiguration;
@@ -102,7 +103,7 @@ public class SitesClient
             int buildNumber)
     {
         Map<String, String> issueLinks = new HashMap<>();
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(site.createGetIssueLinksRequest(jobHash, buildNumber))
                     .execute())
             {
@@ -148,7 +149,7 @@ public class SitesClient
     {
         BuildLogger logger = new BuildLogger(listener);
 
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(site.createNotifyBuildCompleted(run))
                     .execute())
             {
@@ -178,7 +179,7 @@ public class SitesClient
             Predicate<JiraSite> siteFilter,
             Item item)
     {
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(site.createNotifyJobCreatedRequest(item))
                     .execute())
             {
@@ -222,7 +223,7 @@ public class SitesClient
             Item item,
             JobNotificationType notificationType)
     {
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(site.createNotifyJobRequest(item, notificationType))
                     .execute())
             {
@@ -266,7 +267,7 @@ public class SitesClient
             String oldJobHash,
             Item newItem)
     {
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(site.createNotifyJobMovedRequest(oldJobHash, newItem))
                     .execute())
             {
@@ -327,7 +328,7 @@ public class SitesClient
             Function<JiraSite, Request> request,
             Supplier<String> nameSupplier)
     {
-        doWithSites(siteFilter, site -> {
+        doWithSites(siteFilter, (httpClient, site) -> {
             try (Response response = httpClient.newCall(request.apply(site))
                     .execute())
             {
@@ -361,12 +362,13 @@ public class SitesClient
 
     private void doWithSites(
             Predicate<JiraSite> filter,
-            Consumer<JiraSite> action)
+            BiConsumer<OkHttpClient, JiraSite> action)
     {
+        OkHttpClient httpClient = this.httpClient.get();
         sitesConfiguration.stream()
                 .filter(JiraSite::isEnabled)
                 .filter(filter)
-                .forEach(action);
+                .forEach(site -> action.accept(httpClient, site));
     }
 
     @SuppressWarnings("resource")

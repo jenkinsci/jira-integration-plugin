@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import hudson.Extension;
 import hudson.model.AsyncPeriodicWork;
@@ -19,7 +20,7 @@ public class DailyCheck
 {
     private static final Logger LOGGER = Logger.getLogger(DailyCheck.class.getName());
     private JiraSitesConfiguration sitesConfiguration;
-    private OkHttpClient httpClient;
+    private Provider<OkHttpClient> httpClient;
 
     public DailyCheck()
     {
@@ -33,7 +34,7 @@ public class DailyCheck
     }
 
     @Inject
-    public void setHttpClient(OkHttpClient httpClient)
+    public void setHttpClient(Provider<OkHttpClient> httpClient)
     {
         this.httpClient = httpClient;
     }
@@ -55,6 +56,6 @@ public class DailyCheck
             throws IOException, InterruptedException
     {
         LOGGER.log(Level.INFO, "Checking Jira Sites...");
-        sitesConfiguration.updateSiteRegistrations(httpClient);
+        sitesConfiguration.updateSiteRegistrations(httpClient.get());
     }
 }

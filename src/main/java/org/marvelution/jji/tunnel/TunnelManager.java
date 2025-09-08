@@ -33,7 +33,7 @@ public class TunnelManager
     private ClassLoader tunnelClassLoader;
     private boolean loadedTunnelFilter = false;
     private String forwardTo;
-    private OkHttpClient httpClient;
+    private Provider<OkHttpClient> httpClient;
     private ObjectMapper objectMapper;
 
     @Override
@@ -264,7 +264,7 @@ public class TunnelManager
             if (tunnelClassLoader != null && loadedTunnelFilter)
             {
                 tunnels.computeIfAbsent(site.getIdentifier(), id -> {
-                    try (Response response = httpClient.newCall(site.createGetTunnelDetailsRequest())
+                    try (Response response = httpClient.get().newCall(site.createGetTunnelDetailsRequest())
                             .execute();
                          ResponseBody body = response.body())
                     {
@@ -360,7 +360,7 @@ public class TunnelManager
     }
 
     @Inject
-    public void setHttpClient(OkHttpClient httpClient)
+    public void setHttpClient(Provider<OkHttpClient> httpClient)
     {
         this.httpClient = httpClient;
     }
