@@ -29,19 +29,5 @@
                 alert('Unable to navigate to site.');
             }
         });
-        const refresh = row.querySelector('.refresh-tunnel');
-        if (refresh) {
-            refresh.addEventListener('click', event => {
-                event.preventDefault();
-                try {
-                    JJI.refreshTunnel(url, function () {
-                        alert('Refreshing tunnel');
-                        window.location.reload();
-                    });
-                } catch (e) {
-                    alert('Unable to refresh tunnel for site.');
-                }
-            });
-        }
     });
 })();

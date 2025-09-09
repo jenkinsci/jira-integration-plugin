@@ -42,7 +42,6 @@
         <jenkins.integration.common.version>1.62</jenkins.integration.common.version>
         <jenkins.baseline>2.479</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.1</jenkins.version>
-        <ngrok.version>1.0.1</ngrok.version>
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
@@ -143,12 +142,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ngrok</groupId>
-            <artifactId>ngrok-java</artifactId>
-            <version>${ngrok.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
@@ -242,67 +235,7 @@
                 <executions>
                     <execution>
                         <id>no-snapshots-in-release</id>
-                        <phase>not-valid</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-ngrok-native</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/main/webapp/WEB-INF/ngrok/</outputDirectory>
-                            <stripVersion>true</stripVersion>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-x86_32</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-aarch_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>windows-x86_32</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>windows-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>osx-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>osx-aarch_64</classifier>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
+                        <phase>none</phase>
                     </execution>
                 </executions>
             </plugin>
