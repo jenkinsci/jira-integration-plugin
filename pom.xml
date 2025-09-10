@@ -45,6 +45,7 @@
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
+        <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
 
         <jenkins.home>${project.basedir}/work</jenkins.home>
     </properties>
