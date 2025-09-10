@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>5.7</version>
+        <version>5.25</version>
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>jira-integration</artifactId>
@@ -45,9 +45,6 @@
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
-
-        <!-- Override to support Java 23 -->
-        <spotbugs-maven-plugin.version>4.8.6.6</spotbugs-maven-plugin.version>
 
         <jenkins.home>${project.basedir}/work</jenkins.home>
     </properties>
