@@ -1,15 +1,14 @@
 package org.marvelution.jji.management;
 
+import org.marvelution.jji.AbstractTechnicalTest;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.synctoken.utils.SharedSecretGenerator;
+
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
-
-import org.marvelution.jji.AbstractTechnicalTest;
-import org.marvelution.jji.configuration.JiraSite;
-import org.marvelution.jji.synctoken.utils.SharedSecretGenerator;
-
 import net.sf.json.JSONObject;
 import okhttp3.*;
 import org.junit.Before;

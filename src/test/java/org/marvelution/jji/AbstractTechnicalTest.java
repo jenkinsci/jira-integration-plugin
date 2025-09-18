@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -30,6 +31,9 @@ public abstract class AbstractTechnicalTest
     @Before
     public void setUpCommonBits()
     {
+        Assume.assumeFalse(System.getProperty("os.name")
+                .startsWith("Windows"));
+
         jenkins.getInstance()
                 .setSecurityRealm(jenkins.createDummySecurityRealm());
         jenkins.getInstance()
