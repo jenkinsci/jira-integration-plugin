@@ -8,6 +8,7 @@ import org.marvelution.jji.JiraIntegrationPlugin;
 import org.marvelution.jji.Messages;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.rest.HttpClientProvider;
 import org.marvelution.jji.security.SyncTokenSecurityContext;
 
 import hudson.Extension;
@@ -43,19 +44,12 @@ public class JiraSiteManagement
     public static final String URL_NAME = "jji";
     private static final Logger LOGGER = Logger.getLogger(JiraSiteManagement.class.getName());
     private JiraSitesConfiguration sitesConfiguration;
-    private OkHttpClient httpClient;
     private JiraSite site;
 
     @Inject
     public void setSitesConfiguration(JiraSitesConfiguration sitesConfiguration)
     {
         this.sitesConfiguration = sitesConfiguration;
-    }
-
-    @Inject
-    public void setHttpClient(OkHttpClient httpClient)
-    {
-        this.httpClient = httpClient;
     }
 
     @Override
@@ -106,6 +100,7 @@ public class JiraSiteManagement
     {
         sitesConfiguration.findSite(URI.create(uri))
                 .ifPresent(site -> {
+                    OkHttpClient httpClient = HttpClientProvider.httpClient();
                     try (Response response = httpClient.newCall(site.createUnregisterRequest())
                             .execute())
                     {
@@ -131,6 +126,7 @@ public class JiraSiteManagement
     {
         return sitesConfiguration.findSite(URI.create(url))
                 .map(site -> {
+                    OkHttpClient httpClient = HttpClientProvider.httpClient();
                     try (Response response = httpClient.newCall(site.createGetBaseUrlRequest())
                             .execute();
                          ResponseBody body = response.body())
@@ -225,6 +221,7 @@ public class JiraSiteManagement
             String url)
             throws IOException, ServletException
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         try (Response response = httpClient.newCall(new Request.Builder().get()
                         .addHeader(Headers.SYNC_TOKEN, token)
                         // Keep setting the old header for the time being
@@ -279,6 +276,7 @@ public class JiraSiteManagement
         {
             JiraSite site = JiraSite.getSite(form);
 
+            OkHttpClient httpClient = HttpClientProvider.httpClient();
             try (Response response = httpClient.newCall(site.createRegisterRequest())
                     .execute())
             {
@@ -312,6 +310,7 @@ public class JiraSiteManagement
                 .getACL()
                 .checkPermission(Jenkins.ADMINISTER);
 
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         sitesConfiguration.updateSiteRegistrations(httpClient);
 
         rsp.sendRedirect(".");
