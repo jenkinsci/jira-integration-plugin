@@ -201,8 +201,16 @@ public class JiraSiteManagement
             {
                 throw new IllegalArgumentException("Invalid URL " + urlParam);
             }
-            String url = Objects.requireNonNull(httpUrl.queryParameter("url"), "Missing url parameter");
-            String token = Objects.requireNonNull(httpUrl.queryParameter("token"), "Missing token parameter");
+            String url = httpUrl.queryParameter("url");
+            if (url == null)
+            {
+                throw new IllegalArgumentException("Missing url parameter");
+            }
+            String token = httpUrl.queryParameter("token");
+            if (token == null)
+            {
+                throw new IllegalArgumentException("Missing token parameter");
+            }
 
             registerSiteForm(req, rsp, token, url);
         }
