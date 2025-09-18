@@ -1,5 +1,22 @@
 package org.marvelution.jji;
 
+import javax.inject.Inject;
+
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.events.JobNotificationType;
+import org.marvelution.jji.rest.HttpClientProvider;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.security.ACL;
+import hudson.util.DaemonThreadFactory;
+import hudson.util.ExceptionCatchingThreadFactory;
+import hudson.util.NamingThreadFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,22 +29,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
-
-import org.marvelution.jji.configuration.JiraSite;
-import org.marvelution.jji.configuration.JiraSitesConfiguration;
-import org.marvelution.jji.events.JobNotificationType;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import hudson.model.Item;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.security.ACL;
-import hudson.util.DaemonThreadFactory;
-import hudson.util.ExceptionCatchingThreadFactory;
-import hudson.util.NamingThreadFactory;
 import jenkins.security.ImpersonatingExecutorService;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -45,17 +46,14 @@ public class SitesClient
             new ImpersonatingExecutorService(Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),
                     "JiraSync"))), ACL.SYSTEM2);
     private final JiraSitesConfiguration sitesConfiguration;
-    private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
 
     @Inject
     public SitesClient(
             JiraSitesConfiguration sitesConfiguration,
-            OkHttpClient httpClient,
             ObjectMapper objectMapper)
     {
         this.sitesConfiguration = sitesConfiguration;
-        this.httpClient = httpClient;
         this.objectMapper = objectMapper;
     }
 
@@ -102,6 +100,7 @@ public class SitesClient
             int buildNumber)
     {
         Map<String, String> issueLinks = new HashMap<>();
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(site.createGetIssueLinksRequest(jobHash, buildNumber))
                     .execute())
@@ -148,6 +147,7 @@ public class SitesClient
     {
         BuildLogger logger = new BuildLogger(listener);
 
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(site.createNotifyBuildCompleted(run))
                     .execute())
@@ -178,6 +178,7 @@ public class SitesClient
             Predicate<JiraSite> siteFilter,
             Item item)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(site.createNotifyJobCreatedRequest(item))
                     .execute())
@@ -222,6 +223,7 @@ public class SitesClient
             Item item,
             JobNotificationType notificationType)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(site.createNotifyJobRequest(item, notificationType))
                     .execute())
@@ -266,6 +268,7 @@ public class SitesClient
             String oldJobHash,
             Item newItem)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(site.createNotifyJobMovedRequest(oldJobHash, newItem))
                     .execute())
@@ -327,6 +330,7 @@ public class SitesClient
             Function<JiraSite, Request> request,
             Supplier<String> nameSupplier)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         doWithSites(siteFilter, site -> {
             try (Response response = httpClient.newCall(request.apply(site))
                     .execute())
