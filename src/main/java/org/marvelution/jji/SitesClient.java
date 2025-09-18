@@ -1,11 +1,11 @@
 package org.marvelution.jji;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 import org.marvelution.jji.events.JobNotificationType;
+import org.marvelution.jji.rest.HttpClientProvider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,17 +46,14 @@ public class SitesClient
             new ImpersonatingExecutorService(Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),
                     "JiraSync"))), ACL.SYSTEM2);
     private final JiraSitesConfiguration sitesConfiguration;
-    private final Provider<OkHttpClient> httpClient;
     private final ObjectMapper objectMapper;
 
     @Inject
     public SitesClient(
             JiraSitesConfiguration sitesConfiguration,
-            Provider<OkHttpClient> httpClient,
             ObjectMapper objectMapper)
     {
         this.sitesConfiguration = sitesConfiguration;
-        this.httpClient = httpClient;
         this.objectMapper = objectMapper;
     }
 
@@ -364,7 +361,7 @@ public class SitesClient
             Predicate<JiraSite> filter,
             BiConsumer<OkHttpClient, JiraSite> action)
     {
-        OkHttpClient httpClient = this.httpClient.get();
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         sitesConfiguration.stream()
                 .filter(JiraSite::isEnabled)
                 .filter(filter)

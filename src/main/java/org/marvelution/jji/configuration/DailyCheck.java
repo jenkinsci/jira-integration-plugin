@@ -1,14 +1,14 @@
 package org.marvelution.jji.configuration;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.inject.Inject;
-import javax.inject.Provider;
+
+import org.marvelution.jji.rest.HttpClientProvider;
 
 import hudson.Extension;
 import hudson.model.AsyncPeriodicWork;
 import hudson.model.TaskListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import okhttp3.OkHttpClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -20,7 +20,6 @@ public class DailyCheck
 {
     private static final Logger LOGGER = Logger.getLogger(DailyCheck.class.getName());
     private JiraSitesConfiguration sitesConfiguration;
-    private Provider<OkHttpClient> httpClient;
 
     public DailyCheck()
     {
@@ -31,12 +30,6 @@ public class DailyCheck
     public void setSitesConfiguration(JiraSitesConfiguration sitesConfiguration)
     {
         this.sitesConfiguration = sitesConfiguration;
-    }
-
-    @Inject
-    public void setHttpClient(Provider<OkHttpClient> httpClient)
-    {
-        this.httpClient = httpClient;
     }
 
     @Override
@@ -53,9 +46,9 @@ public class DailyCheck
 
     @Override
     protected void execute(TaskListener listener)
-            throws IOException, InterruptedException
     {
         LOGGER.log(Level.INFO, "Checking Jira Sites...");
-        sitesConfiguration.updateSiteRegistrations(httpClient.get());
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
+        sitesConfiguration.updateSiteRegistrations(httpClient);
     }
 }

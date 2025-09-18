@@ -1,7 +1,5 @@
 package org.marvelution.jji;
 
-import java.util.Optional;
-
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 import org.marvelution.jji.rest.HttpClientProvider;
@@ -10,6 +8,7 @@ import org.marvelution.jji.synctoken.CanonicalHttpServletRequest;
 import org.marvelution.jji.synctoken.SyncTokenBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.junit.Before;
@@ -37,7 +36,7 @@ public abstract class AbstractTechnicalTest
                 .setAuthorizationStrategy(authorizationStrategy);
         sitesConfiguration = jenkins.getInstance()
                 .getDescriptorByType(JiraSitesConfiguration.class);
-        httpClient = new HttpClientProvider().httpClient();
+        httpClient = HttpClientProvider.httpClient();
         objectMapper = new ObjectMapperProvider().objectMapper();
     }
 

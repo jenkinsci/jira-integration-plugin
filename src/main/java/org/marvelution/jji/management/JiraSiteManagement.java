@@ -2,7 +2,6 @@ package org.marvelution.jji.management;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.servlet.ServletException;
 
 import org.marvelution.jji.Headers;
@@ -10,6 +9,7 @@ import org.marvelution.jji.JiraIntegrationPlugin;
 import org.marvelution.jji.Messages;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.rest.HttpClientProvider;
 import org.marvelution.jji.security.SyncTokenSecurityContext;
 import org.marvelution.jji.tunnel.TunnelManager;
 
@@ -47,7 +47,6 @@ public class JiraSiteManagement
     private static final Logger LOGGER = Logger.getLogger(JiraSiteManagement.class.getName());
     private JiraSitesConfiguration sitesConfiguration;
     private TunnelManager tunnelManager;
-    private Provider<OkHttpClient> httpClient;
     private JiraSite site;
 
     @Inject
@@ -60,12 +59,6 @@ public class JiraSiteManagement
     public void setTunnelManager(TunnelManager tunnelManager)
     {
         this.tunnelManager = tunnelManager;
-    }
-
-    @Inject
-    public void setHttpClient(Provider<OkHttpClient> httpClient)
-    {
-        this.httpClient = httpClient;
     }
 
     @Override
@@ -123,9 +116,10 @@ public class JiraSiteManagement
     @JavaScriptMethod
     public void deleteSite(String uri)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         sitesConfiguration.findSite(URI.create(uri))
                 .ifPresent(site -> {
-                    try (Response response = httpClient.get().newCall(site.createUnregisterRequest())
+                    try (Response response = httpClient.newCall(site.createUnregisterRequest())
                             .execute())
                     {
                         if (response.isSuccessful())
@@ -148,9 +142,10 @@ public class JiraSiteManagement
     @JavaScriptMethod
     public String getSiteUrl(String url)
     {
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
         return sitesConfiguration.findSite(URI.create(url))
                 .map(site -> {
-                    try (Response response = httpClient.get().newCall(site.createGetBaseUrlRequest())
+                    try (Response response = httpClient.newCall(site.createGetBaseUrlRequest())
                             .execute();
                          ResponseBody body = response.body())
                     {
@@ -239,6 +234,7 @@ public class JiraSiteManagement
         }
         catch (Exception e)
         {
+            LOGGER.log(Level.SEVERE, "Registration of Jira site failed", e);
             req.setAttribute("error", e.getMessage());
             req.getView(this, "manual")
                     .forward(req, rsp);
@@ -252,7 +248,8 @@ public class JiraSiteManagement
             String url)
             throws IOException, ServletException
     {
-        try (Response response = httpClient.get().newCall(new Request.Builder().get()
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
+        try (Response response = httpClient.newCall(new Request.Builder().get()
                         .addHeader(Headers.SYNC_TOKEN, token)
                         // Keep setting the old header for the time being
                         .addHeader(OLD_SYNC_TOKEN_HEADER_NAME, token)
@@ -306,7 +303,8 @@ public class JiraSiteManagement
         {
             JiraSite site = JiraSite.getSite(form);
 
-            try (Response response = httpClient.get().newCall(site.createRegisterRequest())
+            OkHttpClient httpClient = HttpClientProvider.httpClient();
+            try (Response response = httpClient.newCall(site.createRegisterRequest())
                     .execute())
             {
                 if (response.code() != 202)
@@ -339,7 +337,8 @@ public class JiraSiteManagement
                 .getACL()
                 .checkPermission(Jenkins.ADMINISTER);
 
-        sitesConfiguration.updateSiteRegistrations(httpClient.get());
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
+        sitesConfiguration.updateSiteRegistrations(httpClient);
 
         rsp.sendRedirect(".");
     }

@@ -1,27 +1,39 @@
 package org.marvelution.jji.tunnel;
 
-import javax.annotation.*;
-import javax.inject.*;
-import javax.servlet.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.*;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.servlet.ServletException;
 
+import org.marvelution.jji.JiraIntegrationPlugin;
 import org.marvelution.jji.Messages;
-import org.marvelution.jji.*;
-import org.marvelution.jji.configuration.*;
+import org.marvelution.jji.configuration.JiraSite;
+import org.marvelution.jji.configuration.JiraSitesConfiguration;
+import org.marvelution.jji.rest.HttpClientProvider;
 
-import com.fasterxml.jackson.databind.*;
-import hudson.*;
-import hudson.init.*;
-import hudson.model.*;
-import hudson.model.listeners.*;
-import hudson.util.*;
-import jenkins.model.*;
-import okhttp3.*;
-import org.springframework.security.access.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hudson.Extension;
+import hudson.Plugin;
+import hudson.PluginWrapper;
+import hudson.XmlFile;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.Saveable;
+import hudson.model.listeners.SaveableListener;
+import hudson.util.PluginServletFilter;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.springframework.security.access.AccessDeniedException;
 
 @Extension
 public class TunnelManager
@@ -33,7 +45,6 @@ public class TunnelManager
     private ClassLoader tunnelClassLoader;
     private boolean loadedTunnelFilter = false;
     private String forwardTo;
-    private Provider<OkHttpClient> httpClient;
     private ObjectMapper objectMapper;
 
     @Override
@@ -115,61 +126,9 @@ public class TunnelManager
         return forwardTo;
     }
 
-    private static String normalizeOs(String value)
-    {
-        value = normalize(value);
-        if (value.startsWith("linux"))
-        {
-            return "linux";
-        }
-        else if (value.startsWith("mac") || value.startsWith("osx"))
-        {
-            return "osx";
-        }
-        else if (value.startsWith("windows"))
-        {
-            return "windows";
-        }
-        else
-        {
-            return UNKNOWN;
-        }
-    }
-
-    private static String normalizeArch(String value)
-    {
-        value = normalize(value);
-        if (value.matches("^(x8664|amd64|ia32e|em64t|x64)$"))
-        {
-            return "x86_64";
-        }
-        else if (value.matches("^(x8632|x86|i[3-6]86|ia32|x32)$"))
-        {
-            return "x86_32";
-        }
-        else if ("aarch64".equals(value))
-        {
-            return "aarch_64";
-        }
-        else
-        {
-            return UNKNOWN;
-        }
-    }
-
     public ClassLoader getTunnelClassLoader()
     {
         return tunnelClassLoader;
-    }
-
-    private static String normalize(final String value)
-    {
-        if (value == null)
-        {
-            return "";
-        }
-        return value.toLowerCase(Locale.US)
-                .replaceAll("[^a-z0-9]+", "");
     }
 
     @Initializer(after = InitMilestone.PLUGINS_PREPARED)
@@ -264,7 +223,8 @@ public class TunnelManager
             if (tunnelClassLoader != null && loadedTunnelFilter)
             {
                 tunnels.computeIfAbsent(site.getIdentifier(), id -> {
-                    try (Response response = httpClient.get().newCall(site.createGetTunnelDetailsRequest())
+                    OkHttpClient httpClient = HttpClientProvider.httpClient();
+                    try (Response response = httpClient.newCall(site.createGetTunnelDetailsRequest())
                             .execute();
                          ResponseBody body = response.body())
                     {
@@ -360,14 +320,60 @@ public class TunnelManager
     }
 
     @Inject
-    public void setHttpClient(Provider<OkHttpClient> httpClient)
-    {
-        this.httpClient = httpClient;
-    }
-
-    @Inject
     public void setObjectMapper(ObjectMapper objectMapper)
     {
         this.objectMapper = objectMapper;
+    }
+
+    private static String normalizeOs(String value)
+    {
+        value = normalize(value);
+        if (value.startsWith("linux"))
+        {
+            return "linux";
+        }
+        else if (value.startsWith("mac") || value.startsWith("osx"))
+        {
+            return "osx";
+        }
+        else if (value.startsWith("windows"))
+        {
+            return "windows";
+        }
+        else
+        {
+            return UNKNOWN;
+        }
+    }
+
+    private static String normalizeArch(String value)
+    {
+        value = normalize(value);
+        if (value.matches("^(x8664|amd64|ia32e|em64t|x64)$"))
+        {
+            return "x86_64";
+        }
+        else if (value.matches("^(x8632|x86|i[3-6]86|ia32|x32)$"))
+        {
+            return "x86_32";
+        }
+        else if ("aarch64".equals(value))
+        {
+            return "aarch_64";
+        }
+        else
+        {
+            return UNKNOWN;
+        }
+    }
+
+    private static String normalize(final String value)
+    {
+        if (value == null)
+        {
+            return "";
+        }
+        return value.toLowerCase(Locale.US)
+                .replaceAll("[^a-z0-9]+", "");
     }
 }
