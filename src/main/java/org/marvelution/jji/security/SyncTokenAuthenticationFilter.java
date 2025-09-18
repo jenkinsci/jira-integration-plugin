@@ -85,7 +85,7 @@ public class SyncTokenAuthenticationFilter
         try
         {
             JWTClaimsSet claimsSet = tokenAuthenticator.authenticate(new SyncTokenRequest(request));
-            LOGGER.log(Level.FINE, "Authenticated {0} through Sync Token.", claimsSet.getIssuer());
+            LOGGER.log(Level.INFO, "Authenticated {0} through Sync Token.", claimsSet.getIssuer());
             JiraSite site = sitesConfiguration.findSite(claimsSet.getIssuer())
                     .orElseThrow(() -> new IllegalStateException("Authenticated by sync-token but unable to find a Jira site for it."));
 
@@ -102,7 +102,7 @@ public class SyncTokenAuthenticationFilter
 
             pathInfo = pathInfo.endsWith("/") || lastDotIndex > lastSlashIndex ? pathInfo : (pathInfo + '/');
 
-            if (REGISTER_PATH.equals(pathInfo))
+            if (pathInfo.endsWith(REGISTER_PATH))
             {
                 LOGGER.log(Level.FINE,
                         "Allowing request to {0} for unverified site {1}",

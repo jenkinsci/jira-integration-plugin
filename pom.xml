@@ -265,66 +265,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-ngrok-native</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/main/webapp/WEB-INF/ngrok/</outputDirectory>
-                            <stripVersion>true</stripVersion>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-x86_32</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>linux-aarch_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>windows-x86_32</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>windows-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>osx-x86_64</classifier>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.ngrok</groupId>
-                                    <artifactId>ngrok-java-native</artifactId>
-                                    <version>${ngrok.version}</version>
-                                    <classifier>osx-aarch_64</classifier>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.jenkins-ci.tools</groupId>
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
