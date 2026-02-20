@@ -13,9 +13,9 @@ public class HttpClientProvider
     public static OkHttpClient httpClient()
     {
         return JenkinsOkHttpClient.newClientBuilder(new OkHttpClient())
-                .connectTimeout(Duration.ofMillis(5000))
-                .readTimeout(Duration.ofMillis(5000))
-                .writeTimeout(Duration.ofMillis(5000))
+                .connectTimeout(Duration.ofMillis(20000))
+                .readTimeout(Duration.ofMillis(20000))
+                .writeTimeout(Duration.ofMillis(20000))
                 .addInterceptor(chain -> {
                     Request request = chain.request()
                             .newBuilder()
