@@ -164,7 +164,7 @@ public class SitesClient
             }
             catch (Exception e)
             {
-                logger.error("Failed to notify %s on this builds completion -> %s", site, e.getMessage());
+                logger.error("Failed to notify %s on this build completion -> %s", site, e.getMessage());
             }
         });
     }
