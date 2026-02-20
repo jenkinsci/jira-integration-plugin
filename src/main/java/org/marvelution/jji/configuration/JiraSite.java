@@ -444,6 +444,8 @@ public class JiraSite
             uri = url;
         }
         setName(details.getString("name"));
+        setPostJson(details.optBoolean("firewalled", false));
+        setTunneled(details.optBoolean("tunneled", false));
         JSONObject context = details.optJSONObject("context");
         if (context != null)
         {
