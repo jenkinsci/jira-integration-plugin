@@ -44,6 +44,11 @@
                                         ${site.uri}
                                     </td>
                                     <td>
+                                        <j:if test="${site.tunneled}">
+                                            <a href="#" class="refresh-tunnel">
+                                                <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
+                                            </a>
+                                        </j:if>
                                         <a href="#" class="navigate-to-site">
                                             <l:icon src="symbol-play" class="icon-sm" tooltip="${%navigate.to.site}"/>
                                         </a>
@@ -56,6 +61,10 @@
                         </tbody>
                     </table>
                     <ul class="legend">
+                        <li>
+                            <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
+                            ${%refresh.site.tunnel}
+                        </li>
                         <li>
                             <l:icon src="symbol-play" class="icon-sm" tooltip="${%navigate.to.site}"/>
                             ${%navigate.to.site}

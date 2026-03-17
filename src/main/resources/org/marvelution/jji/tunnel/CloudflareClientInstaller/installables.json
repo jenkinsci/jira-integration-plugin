@@ -1,0 +1,137 @@
+{
+  "list": [
+    {
+      "id": "2026.3.0",
+      "name": "Cloudflare Client 2026.3.0",
+      "releases": [
+        {
+          "os": "linux",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-linux-amd64"
+        },
+        {
+          "os": "linux",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-linux-386"
+        },
+        {
+          "os": "linux",
+          "arch": "arm64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-linux-arm64"
+        },
+        {
+          "os": "linux",
+          "arch": "arm",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-linux-arm"
+        },
+        {
+          "os": "mac",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-darwin-amd64.tgz"
+        },
+        {
+          "os": "mac",
+          "arch": "arm64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-darwin-arm64.tgz"
+        },
+        {
+          "os": "windows",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-windows-amd64.exe"
+        },
+        {
+          "os": "windows",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.3.0/cloudflared-windows-386.exe"
+        }
+      ]
+    },
+    {
+      "id": "2025.11.1",
+      "name": "Cloudflare Client 2025.11.1",
+      "releases": [
+        {
+          "os": "linux",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-linux-amd64"
+        },
+        {
+          "os": "linux",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-linux-386"
+        },
+        {
+          "os": "linux",
+          "arch": "arm64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-linux-arm64"
+        },
+        {
+          "os": "linux",
+          "arch": "arm",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-linux-arm"
+        },
+        {
+          "os": "mac",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-darwin-amd64.tgz"
+        },
+        {
+          "os": "mac",
+          "arch": "arm64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-darwin-arm64.tgz"
+        },
+        {
+          "os": "windows",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-windows-amd64.exe"
+        },
+        {
+          "os": "windows",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2025.11.1/cloudflared-windows-386.exe"
+        }
+      ]
+    },
+    {
+      "id": "2024.3.0",
+      "name": "Cloudflare Client 2024.3.0",
+      "releases": [
+        {
+          "os": "linux",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-linux-amd64"
+        },
+        {
+          "os": "linux",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-linux-386"
+        },
+        {
+          "os": "linux",
+          "arch": "arm64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-linux-arm64"
+        },
+        {
+          "os": "linux",
+          "arch": "arm",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-linux-arm"
+        },
+        {
+          "os": "mac",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-darwin-amd64.tgz"
+        },
+        {
+          "os": "windows",
+          "arch": "amd64",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-windows-amd64.exe"
+        },
+        {
+          "os": "windows",
+          "arch": "386",
+          "url": "https://github.com/cloudflare/cloudflared/releases/download/2024.3.0/cloudflared-windows-386.exe"
+        }
+      ]
+    }
+  ]
+}

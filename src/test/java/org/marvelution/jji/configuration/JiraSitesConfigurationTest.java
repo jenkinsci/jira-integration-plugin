@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.*;
 import org.jvnet.hudson.test.recipes.*;
 
+import org.marvelution.jji.tunnel.TunnelManager;
 import static org.assertj.core.api.Assertions.*;
 import static org.marvelution.jji.configuration.JiraSitesConfiguration.*;
 
