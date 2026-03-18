@@ -111,6 +111,8 @@ public class JiraSitesConfiguration
         existing.setName(newSite.getName());
         existing.setIdentifier(newSite.getIdentifier());
         existing.setPostJson(newSite.isPostJson());
+        existing.setTunneled(newSite.isTunneled());
+        existing.setContext(newSite.getContext());
         updateSharedSecretCredentials(existing, newSite);
     }
 

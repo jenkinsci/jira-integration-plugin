@@ -1,5 +1,12 @@
 package org.marvelution.jji.management;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.inject.Inject;
 import jakarta.servlet.ServletException;
 
@@ -10,16 +17,10 @@ import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 import org.marvelution.jji.rest.HttpClientProvider;
 import org.marvelution.jji.security.SyncTokenSecurityContext;
+import org.marvelution.jji.tunnel.TunnelManager;
 
 import hudson.Extension;
 import hudson.model.ManagementLink;
-import java.io.IOException;
-import java.net.URI;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -43,8 +44,15 @@ public class JiraSiteManagement
 
     public static final String URL_NAME = "jji";
     private static final Logger LOGGER = Logger.getLogger(JiraSiteManagement.class.getName());
+    private TunnelManager tunnelManager;
     private JiraSitesConfiguration sitesConfiguration;
     private JiraSite site;
+
+    @Inject
+    public void setTunnelManager(TunnelManager tunnelManager)
+    {
+        this.tunnelManager = tunnelManager;
+    }
 
     @Inject
     public void setSitesConfiguration(JiraSitesConfiguration sitesConfiguration)
@@ -139,6 +147,14 @@ public class JiraSiteManagement
                     }
                 })
                 .orElseGet(Messages::site_not_found);
+    }
+
+    @JavaScriptMethod
+    public void refreshTunnel(String url)
+    {
+        sitesConfiguration.findSite(URI.create(url))
+                .filter(JiraSite::isTunneled)
+                .ifPresent(tunnelManager::restartTunnel);
     }
 
     public String getBaseHelpUrl()
