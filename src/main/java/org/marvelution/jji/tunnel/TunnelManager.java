@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -160,7 +161,7 @@ public class TunnelManager
             args.add("--token", token);
 
             FilePath logFile = getTunnelLogFile(site);
-            logFile.getParent().mkdirs();
+            Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null").mkdirs();
 
             LOGGER.log(Level.INFO, "Starting tunnel for site {0}", site.getIdentifier());
             OutputStream output = logFile.write();
