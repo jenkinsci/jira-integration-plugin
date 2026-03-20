@@ -27,6 +27,7 @@ import net.sf.json.JSONObject;
 import okhttp3.*;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
+import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.springframework.security.access.AccessDeniedException;
@@ -371,5 +372,46 @@ public class JiraSiteManagement
         URI url = URI.create(getJsonFromRequest(request).getString("url"));
         sitesConfiguration.findSite(url)
                 .ifPresent(sitesConfiguration::unregisterSite);
+    }
+
+    @WebMethod(name = "tunnel-log")
+    public void doTunnelLog(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException
+    {
+        Jenkins.get().getACL().checkPermission(Jenkins.ADMINISTER);
+        String identifier = req.getParameter("identifier");
+        sitesConfiguration.findSite(identifier).ifPresent(site -> {
+            req.setAttribute("site", site);
+            try {
+                req.getView(this, "tunnelLog").forward(req, rsp);
+            } catch (ServletException | IOException e) {
+                LOGGER.log(Level.SEVERE, "Failed to forward to tunnelLog view", e);
+            }
+        });
+    }
+
+    public boolean hasTunnelLog(JiraSite site)
+    {
+        try
+        {
+            return TunnelManager.getTunnelLogFile(site).exists();
+        }
+        catch (IOException | InterruptedException e)
+        {
+            LOGGER.log(Level.WARNING, "Failed to check if tunnel log exists for site " + site.getIdentifier(), e);
+            return false;
+        }
+    }
+
+    public String getTunnelLog(JiraSite site)
+    {
+        try
+        {
+            return TunnelManager.getTunnelLogFile(site).readToString();
+        }
+        catch (IOException | InterruptedException e)
+        {
+            LOGGER.log(Level.WARNING, "Failed to read tunnel log for site " + site.getIdentifier(), e);
+            return "";
+        }
     }
 }

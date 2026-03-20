@@ -1,6 +1,7 @@
 package org.marvelution.jji.tunnel;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,7 @@ import hudson.model.listeners.SaveableListener;
 import hudson.tools.InstallSourceProperty;
 import hudson.util.ArgumentListBuilder;
 import jenkins.model.Jenkins;
+import jenkins.util.Timer;
 
 @Extension
 public class TunnelManager
@@ -157,19 +159,42 @@ public class TunnelManager
             args.add("run");
             args.add("--token", token);
 
+            FilePath logFile = getTunnelLogFile(site);
+            logFile.getParent().mkdirs();
+
             LOGGER.log(Level.INFO, "Starting tunnel for site {0}", site.getIdentifier());
+            OutputStream output = logFile.write();
             Proc proc = master.createLauncher(TaskListener.NULL)
                     .launch()
                     .cmds(args)
-                    .stdout(TaskListener.NULL.getLogger())
-                    .stderr(TaskListener.NULL.getLogger())
+                    .stdout(output)
+                    .stderr(output)
                     .start();
             activeTunnels.put(site.getIdentifier(), proc);
+            Timer.get().submit(() -> {
+                try {
+                    int exitCode = proc.join();
+                    LOGGER.log(Level.INFO, "Tunnel for site {0} stopped with exit code {1}", new Object[]{site.getIdentifier(), exitCode});
+                } catch (IOException | InterruptedException e) {
+                    LOGGER.log(Level.WARNING, "Failed to join tunnel for site " + site.getIdentifier(), e);
+                } finally {
+                    try {
+                        output.close();
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Failed to close tunnel log for site " + site.getIdentifier(), e);
+                    }
+                }
+            });
         }
         catch (Exception e)
         {
             LOGGER.log(Level.SEVERE, "Failed to start tunnel for site " + site.getIdentifier(), e);
         }
+    }
+
+    public static FilePath getTunnelLogFile(JiraSite site)
+    {
+        return new FilePath(Jenkins.get().getRootDir()).child("logs").child("tunnels").child(site.getIdentifier() + ".log");
     }
 
     private synchronized void stopTunnel(JiraSite site)

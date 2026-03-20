@@ -1,0 +1,25 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson">
+    <l:layout permission="${app.ADMINISTER}" title="${%tunnel.log.title(request.getAttribute('site').name)}" norefresh="true" type="one-column">
+        <l:main-panel>
+            <h1>${%tunnel.log.title(request.getAttribute('site').name)}</h1>
+            <j:choose>
+                <j:when test="${it.hasTunnelLog(request.getAttribute('site'))}">
+                    <pre id="out" class="console-output">
+                        <j:whitespace>${it.getTunnelLog(request.getAttribute('site'))}</j:whitespace>
+                    </pre>
+                </j:when>
+                <j:otherwise>
+                    <p>${%no.log.file}</p>
+                </j:otherwise>
+            </j:choose>
+            <l:isAdmin>
+                <div class="jenkins-!-margin-top-2">
+                    <a href="." class="jenkins-button">
+                        ${%back.to.sites}
+                    </a>
+                </div>
+            </l:isAdmin>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

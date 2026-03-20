@@ -45,6 +45,9 @@
                                     </td>
                                     <td>
                                         <j:if test="${site.tunneled}">
+                                            <a href="tunnel-log?identifier=${site.identifier}">
+                                                <l:icon src="symbol-terminal" class="icon-sm" tooltip="${%view.site.tunnel.log}"/>
+                                            </a>
                                             <a href="#" class="refresh-tunnel">
                                                 <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
                                             </a>
@@ -61,6 +64,10 @@
                         </tbody>
                     </table>
                     <ul class="legend">
+                        <li>
+                            <l:icon src="symbol-terminal" class="icon-sm" tooltip="${%view.site.tunnel.log}"/>
+                            ${%view.site.tunnel.log}
+                        </li>
                         <li>
                             <l:icon src="symbol-refresh" class="icon-sm" tooltip="${%refresh.site.tunnel}"/>
                             ${%refresh.site.tunnel}
