@@ -7,7 +7,7 @@ The integration offers support:
 * A **Unidirectional** connection, meaning the Jenkins instance is not accessible by the Jira app. Either because of a firewall or other
   network limitations.
 * A **Bidirectional** connection, meaning the Jenkins instance is accessible by the Jira app for data synchronization.
-* A **Tunnelled** connection, meaning the Jenkins instance is not accessible directly by the Jira app, but can be 
+* A **Tunneled** connection, meaning the Jenkins instance is not accessible directly by the Jira app, but can be 
   made accessible through a secure tunnel. (Only available in the Jira Cloud app) 
 
 > :warning: This plugin does need
