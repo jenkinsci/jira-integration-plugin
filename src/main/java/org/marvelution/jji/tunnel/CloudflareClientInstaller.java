@@ -21,9 +21,16 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import static org.marvelution.jji.tunnel.CloudflareClientInstallation.DEFAULT_VERSION;
+
 public class CloudflareClientInstaller
         extends DownloadFromUrlInstaller
 {
+
+    public CloudflareClientInstaller()
+    {
+        this(DEFAULT_VERSION);
+    }
 
     @DataBoundConstructor
     public CloudflareClientInstaller(String id)
@@ -232,7 +239,9 @@ public class CloudflareClientInstaller
             try (InputStream resource = CloudflareClientInstaller.class.getResourceAsStream("CloudflareClientInstaller/installables.json"))
             {
                 JSONObject d = JSONObject.fromObject(IOUtils.toString(Objects.requireNonNull(resource), StandardCharsets.UTF_8));
-                return Arrays.asList(((InstallableList) JSONObject.toBean(d, InstallableList.class, Map.of("releases", Release.class))).list);
+                return Arrays.asList(((InstallableList) JSONObject.toBean(d,
+                        InstallableList.class,
+                        Map.of("releases", Release.class))).list);
             }
         }
     }

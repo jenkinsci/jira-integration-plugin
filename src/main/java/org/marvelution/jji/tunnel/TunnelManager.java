@@ -243,7 +243,7 @@ public class TunnelManager
             CloudflareClientInstallation.DescriptorImpl descriptor = Jenkins.get()
                     .getDescriptorByType(CloudflareClientInstallation.DescriptorImpl.class);
 
-            CloudflareClientInstaller installer = new CloudflareClientInstaller("2026.3.0");
+            CloudflareClientInstaller installer = new CloudflareClientInstaller();
             try
             {
                 hudson.tools.DownloadFromUrlInstaller.Installable list = installer.getInstallable();

@@ -21,6 +21,8 @@ public class CloudflareClientInstallation
         implements NodeSpecific<CloudflareClientInstallation>
 {
 
+    static final String DEFAULT_VERSION = "2026.5.2";
+
     @DataBoundConstructor
     public CloudflareClientInstallation(
             String name,
@@ -93,7 +95,7 @@ public class CloudflareClientInstallation
         @Override
         public List<? extends hudson.tools.ToolInstaller> getDefaultInstallers()
         {
-            return java.util.Collections.singletonList(new CloudflareClientInstaller("2026.3.0"));
+            return java.util.Collections.singletonList(new CloudflareClientInstaller(DEFAULT_VERSION));
         }
     }
 }
