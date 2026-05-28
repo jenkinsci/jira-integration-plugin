@@ -8,7 +8,7 @@ The integration offers support:
   network limitations.
 * A **Bidirectional** connection, meaning the Jenkins instance is accessible by the Jira app for data synchronization.
 * A **Tunneled** connection, meaning the Jenkins instance is not accessible directly by the Jira app, but can be 
-  made accessible through a secure tunnel. (Only available in the Jira Cloud app) 
+  made accessible through a secure tunnel. (Only available in the advanced Jira Cloud app) 
 
 > :warning: This plugin does need
 > the [Jenkins for Jira](https://marketplace.atlassian.com/apps/1211376/jenkins-for-jira?tab=overview&hosting=cloud)
