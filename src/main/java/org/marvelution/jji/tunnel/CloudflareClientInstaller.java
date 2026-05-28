@@ -1,5 +1,6 @@
 package org.marvelution.jji.tunnel;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -11,11 +12,13 @@ import java.util.Objects;
 
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.tools.DownloadFromUrlInstaller;
 import hudson.tools.ToolInstallation;
+import jenkins.MasterToSlaveFileCallable;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -86,34 +89,19 @@ public class CloudflareClientInstaller
             return expected;
         }
 
-        String url = release.url;
-        boolean isWindows = channel != null && channel.call(new GetIsWindows());
-        String binaryName = isWindows ? "cloudflared.exe" : "cloudflared";
-
-        FilePath binaryPath = expected.child(binaryName);
-
-        if (url.endsWith(".zip") || url.endsWith(".tar.gz") || url.endsWith(".tgz"))
+        if (expected.installIfNecessaryFrom(new URL(release.url),
+                log,
+                "Unpacking " + release.url + " to " + expected + " on " + node.getDisplayName()))
         {
-            // Jenkins' installIfNecessaryFrom handles archives by unzipping into the 'expected' directory.
-            if (expected.installIfNecessaryFrom(new URL(url), log, "Installing Cloudflare Client from archive"))
+            FilePath base = findPullUpDirectory(expected);
+            if (base != null && base != expected)
             {
-                expected.child(".timestamp")
-                        .delete();
-                expected.child(".timestamp")
-                        .touch(System.currentTimeMillis());
+                base.moveAllChildrenTo(expected);
             }
-        }
-        else
-        {
-            // It's a direct binary download.
-            log.getLogger()
-                    .println("Downloading Cloudflare Client binary from " + url);
-            binaryPath.copyFrom(new URL(url));
-            binaryPath.chmod(0755);
-            expected.child(".timestamp")
-                    .delete();
-            expected.child(".timestamp")
-                    .touch(System.currentTimeMillis());
+            // leave a record for the next up-to-date check
+            expected.child(".installedFrom")
+                    .write(release.url, "UTF-8");
+            expected.act(new ChmodRecAPlusX());
         }
 
         return expected;
@@ -124,7 +112,6 @@ public class CloudflareClientInstaller
     {
         @Override
         public String call()
-                throws IOException
         {
             String os = System.getProperty("os.name")
                     .toLowerCase();
@@ -166,6 +153,42 @@ public class CloudflareClientInstaller
                 return "386";
             }
             return arch;
+        }
+    }
+
+    private static class ChmodRecAPlusX
+            extends MasterToSlaveFileCallable<Void>
+    {
+        @Override
+        public Void invoke(
+                File d,
+                VirtualChannel channel)
+                throws IOException
+        {
+            if (!Functions.isWindows())
+            {
+                process(d);
+            }
+            return null;
+        }
+
+        private void process(File f)
+        {
+            if (f.isFile())
+            {
+                f.setExecutable(true, false);
+            }
+            else
+            {
+                File[] kids = f.listFiles();
+                if (kids != null)
+                {
+                    for (File kid : kids)
+                    {
+                        process(kid);
+                    }
+                }
+            }
         }
     }
 
