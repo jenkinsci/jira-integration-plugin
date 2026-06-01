@@ -106,8 +106,7 @@ public class TunnelManager
     {
         try
         {
-            FilePath logFile = getTunnelLogFile(site);
-            TaskListener log = new StreamTaskListener(logFile.write(), StandardCharsets.UTF_8);
+            TaskListener log = getTunnelLog(site);
 
             if (activeTunnels.containsKey(site.getIdentifier()))
             {
@@ -170,9 +169,6 @@ public class TunnelManager
             args.add("run");
             args.add("--token", token);
 
-            Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null")
-                    .mkdirs();
-
             log.getLogger()
                     .println("Starting tunnel for site " + site.getIdentifier());
             Proc proc = master.createLauncher(TaskListener.NULL)
@@ -213,14 +209,24 @@ public class TunnelManager
         Proc proc = activeTunnels.remove(site.getIdentifier());
         if (proc != null)
         {
-            LOGGER.log(Level.INFO, "Stopping tunnel for site {0}", site.getIdentifier());
             try
             {
-                proc.kill();
+                TaskListener log = getTunnelLog(site);
+                log.getLogger()
+                        .println("Stopping tunnel for site " + site.getIdentifier());
+                try
+                {
+                    proc.kill();
+                }
+                catch (IOException | InterruptedException e)
+                {
+                    log.getLogger()
+                            .println("ERROR: Failed to kill tunnel for site " + site.getIdentifier() + "; " + e.getMessage());
+                }
             }
             catch (IOException | InterruptedException e)
             {
-                LOGGER.log(Level.WARNING, "Failed to kill tunnel for site " + site.getIdentifier(), e);
+                LOGGER.log(Level.SEVERE, "Failed to stop tunnel for site " + site.getIdentifier(), e);
             }
         }
     }
@@ -280,6 +286,16 @@ public class TunnelManager
             LOGGER.log(Level.SEVERE, "Failed to create default Cloudflare Client installation", e);
             return null;
         }
+    }
+
+    public static TaskListener getTunnelLog(JiraSite site)
+            throws IOException, InterruptedException
+    {
+
+        FilePath logFile = getTunnelLogFile(site);
+        Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null")
+                .mkdirs();
+        return new StreamTaskListener(logFile.write(), StandardCharsets.UTF_8);
     }
 
     public static FilePath getTunnelLogFile(JiraSite site)
