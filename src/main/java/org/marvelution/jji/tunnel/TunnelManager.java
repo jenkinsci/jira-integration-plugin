@@ -1,7 +1,7 @@
 package org.marvelution.jji.tunnel;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +25,7 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.SaveableListener;
 import hudson.tools.InstallSourceProperty;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.StreamTaskListener;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
@@ -103,53 +104,62 @@ public class TunnelManager
 
     private synchronized void startTunnel(JiraSite site)
     {
-        if (activeTunnels.containsKey(site.getIdentifier()))
-        {
-            Proc proc = activeTunnels.get(site.getIdentifier());
-            try
-            {
-                if (proc.isAlive())
-                {
-                    return;
-                }
-            }
-            catch (IOException | InterruptedException e)
-            {
-                LOGGER.log(Level.WARNING, "Failed to check if tunnel for " + site.getIdentifier() + " is alive", e);
-            }
-            LOGGER.log(Level.INFO, "Tunnel for {0} is dead, restarting", site.getIdentifier());
-            activeTunnels.remove(site.getIdentifier());
-        }
-
-        String token = site.getContext()
-                .optString("token");
-        if (token == null || token.isEmpty())
-        {
-            LOGGER.log(Level.WARNING, "No token found in context for tunneled site {0}", site.getIdentifier());
-            return;
-        }
-
         try
         {
+            FilePath logFile = getTunnelLogFile(site);
+            TaskListener log = new StreamTaskListener(logFile.write(), StandardCharsets.UTF_8);
+
+            if (activeTunnels.containsKey(site.getIdentifier()))
+            {
+                Proc proc = activeTunnels.get(site.getIdentifier());
+                try
+                {
+                    if (proc.isAlive())
+                    {
+                        return;
+                    }
+                }
+                catch (IOException | InterruptedException e)
+                {
+                    log.getLogger()
+                            .println("Failed to check if tunnel for " + site.getIdentifier() + " is alive; " + e.getMessage());
+                }
+                log.getLogger()
+                        .println("WARN: Tunnel for " + site.getIdentifier() + " is dead, restarting");
+                activeTunnels.remove(site.getIdentifier());
+            }
+
+            String token = site.getContext()
+                    .optString("token");
+            if (token == null || token.isEmpty())
+            {
+                log.getLogger()
+                        .println("No token found in context for tunneled site " + site.getIdentifier());
+                return;
+            }
+
             Node master = Jenkins.get();
             CloudflareClientInstallation installation = getInstallation();
             if (installation == null)
             {
-                LOGGER.log(Level.INFO, "No Cloudflare Client installation found, creating default one");
+                log.getLogger()
+                        .println("No Cloudflare Client installation found, creating default one");
                 installation = createDefaultInstallation();
             }
 
             if (installation == null)
             {
-                LOGGER.log(Level.SEVERE, "Failed to find or create Cloudflare Client installation");
+                log.getLogger()
+                        .println("FATAL: Failed to find or create Cloudflare Client installation");
                 return;
             }
 
-            installation = installation.forNode(master, TaskListener.NULL);
-            FilePath executable = installation.getExecutable(master, TaskListener.NULL);
+            installation = installation.forNode(master, log);
+            FilePath executable = installation.getExecutable(master, log);
             if (executable == null || !executable.exists())
             {
-                LOGGER.log(Level.SEVERE, "Cloudflare Client executable not found for site {0}", site.getIdentifier());
+                log.getLogger()
+                        .println("FATAL: Cloudflare Client executable not found for site " + site.getIdentifier());
                 return;
             }
 
@@ -160,42 +170,42 @@ public class TunnelManager
             args.add("run");
             args.add("--token", token);
 
-            FilePath logFile = getTunnelLogFile(site);
-            Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null").mkdirs();
+            Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null")
+                    .mkdirs();
 
-            LOGGER.log(Level.INFO, "Starting tunnel for site {0}", site.getIdentifier());
-            OutputStream output = logFile.write();
+            log.getLogger()
+                    .println("Starting tunnel for site " + site.getIdentifier());
             Proc proc = master.createLauncher(TaskListener.NULL)
                     .launch()
                     .cmds(args)
-                    .stdout(output)
-                    .stderr(output)
+                    .stdout(log)
+                    .stderr(log.getLogger())
                     .start();
             activeTunnels.put(site.getIdentifier(), proc);
-            Timer.get().submit(() -> {
-                try {
-                    int exitCode = proc.join();
-                    LOGGER.log(Level.INFO, "Tunnel for site {0} stopped with exit code {1}", new Object[]{site.getIdentifier(), exitCode});
-                } catch (IOException | InterruptedException e) {
-                    LOGGER.log(Level.WARNING, "Failed to join tunnel for site " + site.getIdentifier(), e);
-                } finally {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        LOGGER.log(Level.WARNING, "Failed to close tunnel log for site " + site.getIdentifier(), e);
-                    }
-                }
-            });
+            Timer.get()
+                    .submit(() -> {
+                        try
+                        {
+                            int exitCode = proc.join();
+                            log.getLogger()
+                                    .println("Tunnel for site " + site.getIdentifier() + " stopped with exit code " + exitCode);
+                        }
+                        catch (IOException | InterruptedException e)
+                        {
+                            log.getLogger()
+                                    .println("Failed to exit tunnel process for site " + site.getIdentifier() + "; " + e.getMessage());
+                        }
+                        finally
+                        {
+                            log.getLogger()
+                                    .close();
+                        }
+                    });
         }
         catch (Exception e)
         {
             LOGGER.log(Level.SEVERE, "Failed to start tunnel for site " + site.getIdentifier(), e);
         }
-    }
-
-    public static FilePath getTunnelLogFile(JiraSite site)
-    {
-        return new FilePath(Jenkins.get().getRootDir()).child("logs").child("tunnels").child(site.getIdentifier() + ".log");
     }
 
     private synchronized void stopTunnel(JiraSite site)
@@ -270,5 +280,13 @@ public class TunnelManager
             LOGGER.log(Level.SEVERE, "Failed to create default Cloudflare Client installation", e);
             return null;
         }
+    }
+
+    public static FilePath getTunnelLogFile(JiraSite site)
+    {
+        return new FilePath(Jenkins.get()
+                .getRootDir()).child("logs")
+                .child("tunnels")
+                .child(site.getIdentifier() + ".log");
     }
 }
