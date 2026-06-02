@@ -34,7 +34,7 @@
     <properties>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
 
-        <revision>5.8.2</revision>
+        <revision>5.8.3</revision>
         <changelist>999999-SNAPSHOT</changelist>
 
         <filterModified>true</filterModified>
