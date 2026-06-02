@@ -12,10 +12,7 @@ import java.util.logging.Logger;
 import org.marvelution.jji.configuration.JiraSite;
 import org.marvelution.jji.configuration.JiraSitesConfiguration;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Proc;
-import hudson.XmlFile;
+import hudson.*;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Computer;
@@ -104,10 +101,9 @@ public class TunnelManager
 
     private synchronized void startTunnel(JiraSite site)
     {
+        TaskListener log = getTunnelLog(site);
         try
         {
-            TaskListener log = getTunnelLog(site);
-
             if (activeTunnels.containsKey(site.getIdentifier()))
             {
                 Proc proc = activeTunnels.get(site.getIdentifier());
@@ -143,7 +139,7 @@ public class TunnelManager
             {
                 log.getLogger()
                         .println("No Cloudflare Client installation found, creating default one");
-                installation = createDefaultInstallation();
+                installation = createDefaultInstallation(log);
             }
 
             if (installation == null)
@@ -200,7 +196,8 @@ public class TunnelManager
         }
         catch (Exception e)
         {
-            LOGGER.log(Level.SEVERE, "Failed to start tunnel for site " + site.getIdentifier(), e);
+            Functions.printStackTrace(e,
+                    log.error("Failed to start tunnel for site " + site.getIdentifier() + "; " + e.getMessage()));
         }
     }
 
@@ -209,24 +206,16 @@ public class TunnelManager
         Proc proc = activeTunnels.remove(site.getIdentifier());
         if (proc != null)
         {
+            TaskListener log = getTunnelLog(site);
+            log.getLogger()
+                    .println("Stopping tunnel for site " + site.getIdentifier());
             try
             {
-                TaskListener log = getTunnelLog(site);
-                log.getLogger()
-                        .println("Stopping tunnel for site " + site.getIdentifier());
-                try
-                {
-                    proc.kill();
-                }
-                catch (IOException | InterruptedException e)
-                {
-                    log.getLogger()
-                            .println("ERROR: Failed to kill tunnel for site " + site.getIdentifier() + "; " + e.getMessage());
-                }
+                proc.kill();
             }
             catch (IOException | InterruptedException e)
             {
-                LOGGER.log(Level.SEVERE, "Failed to stop tunnel for site " + site.getIdentifier(), e);
+                Functions.printStackTrace(e, log.error("Failed to kill tunnel for site " + site.getIdentifier() + "; " + e.getMessage()));
             }
         }
     }
@@ -252,7 +241,7 @@ public class TunnelManager
         return null;
     }
 
-    private CloudflareClientInstallation createDefaultInstallation()
+    private CloudflareClientInstallation createDefaultInstallation(TaskListener log)
     {
         try
         {
@@ -270,7 +259,8 @@ public class TunnelManager
             }
             catch (IOException e)
             {
-                LOGGER.log(Level.FINE, "Failed to get latest installable ID, using default", e);
+                log.getLogger()
+                        .println("Failed to get latest installable ID, using default; " + e.getMessage());
             }
 
             InstallSourceProperty property = new InstallSourceProperty(Collections.singletonList(installer));
@@ -283,19 +273,25 @@ public class TunnelManager
         }
         catch (Exception e)
         {
-            LOGGER.log(Level.SEVERE, "Failed to create default Cloudflare Client installation", e);
+            Functions.printStackTrace(e, log.error("Failed to create Cloudflare Client installation"));
             return null;
         }
     }
 
     public static TaskListener getTunnelLog(JiraSite site)
-            throws IOException, InterruptedException
     {
-
         FilePath logFile = getTunnelLogFile(site);
-        Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null")
-                .mkdirs();
-        return new StreamTaskListener(logFile.write(), StandardCharsets.UTF_8);
+        try
+        {
+            Objects.requireNonNull(logFile.getParent(), "Parent directory for log file cannot be null")
+                    .mkdirs();
+            return new StreamTaskListener(logFile.write(), StandardCharsets.UTF_8);
+        }
+        catch (Exception e)
+        {
+            LOGGER.log(Level.SEVERE, "Failed to get tunnel log listener", e);
+            throw new IllegalStateException("Failed to get tunnel log listener; " + e.getMessage(), e);
+        }
     }
 
     public static FilePath getTunnelLogFile(JiraSite site)

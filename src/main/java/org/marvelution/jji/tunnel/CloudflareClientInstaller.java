@@ -27,6 +27,9 @@ public class CloudflareClientInstaller
         extends DownloadFromUrlInstaller
 {
 
+    private static final String TIMESTAMP_MARKER = ".timestamp";
+    private static final String INSTALLED_FROM_MARKER = ".installedFrom";
+
     public CloudflareClientInstaller()
     {
         this(DEFAULT_VERSION);
@@ -81,8 +84,12 @@ public class CloudflareClientInstaller
             return expected;
         }
 
-        if (isUpToDate(expected, installable))
+        FilePath marker = expected.child(INSTALLED_FROM_MARKER);
+        if (marker.exists() && marker.readToString()
+                .equals(release.url))
         {
+            log.getLogger()
+                    .println("Cloudflare Client is up-to-date");
             return expected;
         }
 
@@ -117,12 +124,12 @@ public class CloudflareClientInstaller
             String url)
             throws IOException, InterruptedException
     {
-        location.child(".timestamp")
+        location.child(TIMESTAMP_MARKER)
                 .delete();
-        location.child(".timestamp")
+        location.child(TIMESTAMP_MARKER)
                 .touch(System.currentTimeMillis());
         // leave a record for the next up-to-date check
-        location.child(".installedFrom")
+        location.child(INSTALLED_FROM_MARKER)
                 .write(url, "UTF-8");
     }
 

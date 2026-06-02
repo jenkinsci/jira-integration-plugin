@@ -53,7 +53,10 @@ public class CloudflareClientInstallation
         }
         VirtualChannel channel = node.getChannel();
         boolean isWindows = channel != null && channel.call(new GetIsWindows());
-        return homePath.child(isWindows ? "cloudflared.exe" : "cloudflared");
+        FilePath binary = homePath.child(isWindows ? "cloudflared.exe" : "cloudflared");
+        log.getLogger()
+                .println("Using " + binary);
+        return binary;
     }
 
     private static final class GetIsWindows
@@ -61,7 +64,6 @@ public class CloudflareClientInstallation
     {
         @Override
         public Boolean call()
-                throws IOException
         {
             return java.io.File.pathSeparatorChar == ';';
         }
