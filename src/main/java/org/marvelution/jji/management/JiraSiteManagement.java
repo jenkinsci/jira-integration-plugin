@@ -30,7 +30,6 @@ import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.springframework.security.access.AccessDeniedException;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toCollection;
@@ -334,36 +333,6 @@ public class JiraSiteManagement
     }
 
     @RequirePOST
-    public void doRegister(StaplerRequest2 request)
-            throws IOException
-    {
-        SyncTokenSecurityContext securityContext = SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
-        Jenkins.get()
-                .getACL()
-                .checkPermission(Jenkins.ADMINISTER);
-
-        JSONObject data = getJsonFromRequest(request);
-        JiraSite jiraSite = JiraSite.getSite(data);
-
-        JiraSite existingSite = securityContext.getSite();
-        if (existingSite != null && Objects.equals(jiraSite.getIdentifier(), existingSite.getIdentifier()) &&
-            Objects.equals(jiraSite.getSharedSecret(), existingSite.getSharedSecret()))
-        {
-            sitesConfiguration.registerSite(jiraSite);
-        }
-        else if (Objects.equals(jiraSite.getIdentifier(),
-                securityContext.getClaimsSet()
-                        .getIssuer()))
-        {
-            sitesConfiguration.registerSite(jiraSite);
-        }
-        else
-        {
-            throw new AccessDeniedException("Unauthorized Jira site registration attempt.");
-        }
-    }
-
-    @RequirePOST
     @SuppressWarnings("lgtm[jenkins/no-permission-check]")
     public void doUnregister(StaplerRequest2 request)
             throws IOException
@@ -375,25 +344,36 @@ public class JiraSiteManagement
     }
 
     @WebMethod(name = "tunnel-log")
-    public void doTunnelLog(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException
+    public void doTunnelLog(
+            StaplerRequest2 req,
+            StaplerResponse2 rsp)
+            throws IOException, ServletException
     {
-        Jenkins.get().getACL().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get()
+                .getACL()
+                .checkPermission(Jenkins.ADMINISTER);
         String identifier = req.getParameter("identifier");
-        sitesConfiguration.findSite(identifier).ifPresent(site -> {
-            req.setAttribute("site", site);
-            try {
-                req.getView(this, "tunnelLog").forward(req, rsp);
-            } catch (ServletException | IOException e) {
-                LOGGER.log(Level.SEVERE, "Failed to forward to tunnelLog view", e);
-            }
-        });
+        sitesConfiguration.findSite(identifier)
+                .ifPresent(site -> {
+                    req.setAttribute("site", site);
+                    try
+                    {
+                        req.getView(this, "tunnelLog")
+                                .forward(req, rsp);
+                    }
+                    catch (ServletException | IOException e)
+                    {
+                        LOGGER.log(Level.SEVERE, "Failed to forward to tunnelLog view", e);
+                    }
+                });
     }
 
     public boolean hasTunnelLog(JiraSite site)
     {
         try
         {
-            return TunnelManager.getTunnelLogFile(site).exists();
+            return TunnelManager.getTunnelLogFile(site)
+                    .exists();
         }
         catch (IOException | InterruptedException e)
         {
@@ -406,7 +386,8 @@ public class JiraSiteManagement
     {
         try
         {
-            return TunnelManager.getTunnelLogFile(site).readToString();
+            return TunnelManager.getTunnelLogFile(site)
+                    .readToString();
         }
         catch (IOException | InterruptedException e)
         {
