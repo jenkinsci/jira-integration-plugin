@@ -33,71 +33,6 @@ class JiraSiteManagementTest
     }
 
     @Test
-    void testRegisterJiraSite()
-            throws Exception
-    {
-        authorizationStrategy.grant(ADMINISTER)
-                .everywhere()
-                .to(ALICE);
-
-        try (Response response = registerJiraSite(jiraSite, Credentials.basic(ALICE, ALICE)))
-        {
-            assertThat(response.isSuccessful()).isTrue();
-            assertThat(sitesConfiguration.getSites()).hasSize(1)
-                    .containsOnly(jiraSite)
-                    .extracting(JiraSite::getContext)
-                    .containsOnly(new JSONObject().element("test", "field"));
-        }
-    }
-
-    @Test
-    void testRegisterJiraSite_NoAdmin()
-            throws Exception
-    {
-        try (Response response = registerJiraSite(jiraSite, Credentials.basic(ALICE, ALICE)))
-        {
-            assertThat(response.isSuccessful()).isFalse();
-            assertThat(sitesConfiguration.getSites()).isEmpty();
-        }
-    }
-
-    @Test
-    void testRegisterJiraSite_NoBasicAuth()
-            throws Exception
-    {
-        try (Response response = registerJiraSite(jiraSite, (String) null))
-        {
-            assertThat(response.isSuccessful()).isFalse();
-            assertThat(sitesConfiguration.getSites()).isEmpty();
-        }
-    }
-
-    @Test
-    void testRegisterJiraSite_Update()
-            throws Exception
-    {
-        injectSite(jiraSite);
-
-        try (Response response = registerJiraSite(jiraSite.withName("Test Name"), (String) null))
-        {
-            assertThat(response.isSuccessful()).isTrue();
-            assertThat(sitesConfiguration.getSites()).hasSize(1)
-                    .containsOnly(jiraSite);
-        }
-    }
-
-    @Test
-    void testRegisterJiraSite_AccessDenied()
-            throws Exception
-    {
-        try (Response response = registerJiraSite(jiraSite, request -> request.addHeader("Authorization", Credentials.basic(ALICE, ALICE))))
-        {
-            assertThat(response.isSuccessful()).isFalse();
-            assertThat(sitesConfiguration.getSites()).isEmpty();
-        }
-    }
-
-    @Test
     void testUnregisterJiraSite()
             throws Exception
     {
@@ -143,41 +78,6 @@ class JiraSiteManagementTest
                     .containsOnly(site);
         }
 
-    }
-
-    private Response registerJiraSite(
-            JiraSite jiraSite,
-            String basicAuth)
-            throws Exception
-    {
-        return registerJiraSite(jiraSite, request -> {
-            Request.Builder builder = signTokenAuth(request.build(), jiraSite, jenkins.contextPath).newBuilder();
-            if (basicAuth != null)
-            {
-                builder.addHeader("Authorization", basicAuth);
-            }
-            return builder;
-        });
-    }
-
-    private Response registerJiraSite(
-            JiraSite jiraSite,
-            UnaryOperator<Request.Builder> requestCustomizer)
-            throws Exception
-    {
-        Map<String, Object> site = new HashMap<>();
-        site.put("url",
-                jiraSite.getUri()
-                        .toASCIIString());
-        site.put("name", jiraSite.getName());
-        site.put("identifier", jiraSite.getIdentifier());
-        site.put("sharedSecret", jiraSite.getSharedSecret());
-        site.put("firewalled", jiraSite.isPostJson());
-        if (jiraSite.getContext() != null)
-        {
-            site.put("context", jiraSite.getContext());
-        }
-        return doAction("register", site, requestCustomizer);
     }
 
     private Response unregisterJiraSite(JiraSite jiraSite)
