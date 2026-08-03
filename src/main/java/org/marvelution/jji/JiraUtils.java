@@ -10,7 +10,7 @@ import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.*;
 
 import static org.apache.commons.codec.digest.DigestUtils.*;
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.*;
 
 public class JiraUtils
 {
