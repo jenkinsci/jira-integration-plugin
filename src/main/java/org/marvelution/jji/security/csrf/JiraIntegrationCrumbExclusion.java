@@ -8,7 +8,7 @@ import org.marvelution.jji.management.*;
 
 import hudson.*;
 import hudson.security.csrf.*;
-import org.apache.commons.lang.*;
+import org.apache.commons.lang3.*;
 
 @Extension
 public class JiraIntegrationCrumbExclusion

@@ -115,6 +115,10 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-lang3-api</artifactId>
+        </dependency>
         <!-- Source can be found here: https://bitbucket.org/marvelution/jira-jenkins-integration-common/ -->
         <dependency>
             <groupId>org.marvelution.jji.components</groupId>
