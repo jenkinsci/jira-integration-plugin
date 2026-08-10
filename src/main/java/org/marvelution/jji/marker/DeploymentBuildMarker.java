@@ -1,5 +1,6 @@
 package org.marvelution.jji.marker;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -21,54 +22,46 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildStep;
-import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest2;
 
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.marvelution.jji.Messages.deployment_build_marker;
 
 /**
  * {@link Recorder}/{@link SimpleBuildStep} that marks a build as a deployment to a specific environment.
+ * <p>
+ * In a pipeline the step is available under the {@code jiraDeploymentInfo} symbol, requiring only the
+ * {@code environmentType}:
+ * <pre>
+ *     jiraDeploymentInfo environmentType: 'staging'
+ *     jiraDeploymentInfo environmentId: 'app-stg-eu-west-1', environmentName: 'Staging', environmentType: 'staging'
+ * </pre>
+ * The {@code environmentId} and {@code environmentName} values support environment-variable expansion, so
+ * dynamic values such as {@code environmentType: env.TARGET_ENVIRONMENT} work as expected.
  *
  * @author Mark Rekveld
  * @since 3.8.0
  */
+@Symbol("jiraDeploymentInfo")
 public class DeploymentBuildMarker
         extends Recorder
         implements SimpleBuildStep, Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final int ID_MAX_LENGTH = 40;
-    private final String environmentId;
-    private final String environmentName;
+    private static final int NAME_MAX_LENGTH = 255;
     private final Environment.Type environmentType;
+    private String environmentId;
+    private String environmentName;
 
     @DataBoundConstructor
-    public DeploymentBuildMarker(
-            String environmentId,
-            String environmentName,
-            String environmentType)
+    public DeploymentBuildMarker(String environmentType)
     {
         this.environmentType = Environment.Type.fromString(environmentType);
-        if (isNotBlank(environmentName))
-        {
-            this.environmentName = environmentName;
-        }
-        else
-        {
-            this.environmentName = this.environmentType.name();
-        }
-        if (isNotBlank(environmentId))
-        {
-            this.environmentId = environmentId.length() > ID_MAX_LENGTH ? generateId(environmentId) : environmentId;
-        }
-        else
-        {
-            this.environmentId = generateId(this.environmentName);
-        }
     }
 
     public String getEnvironmentId()
@@ -76,9 +69,21 @@ public class DeploymentBuildMarker
         return environmentId;
     }
 
+    @DataBoundSetter
+    public void setEnvironmentId(String environmentId)
+    {
+        this.environmentId = trimToNull(environmentId);
+    }
+
     public String getEnvironmentName()
     {
         return environmentName;
+    }
+
+    @DataBoundSetter
+    public void setEnvironmentName(String environmentName)
+    {
+        this.environmentName = trimToNull(environmentName);
     }
 
     public String getEnvironmentType()
@@ -97,8 +102,9 @@ public class DeploymentBuildMarker
             AbstractBuild<?, ?> build,
             Launcher launcher,
             BuildListener listener)
+            throws InterruptedException, IOException
     {
-        perform(build, listener);
+        perform(build, build.getEnvironment(listener), listener);
         return true;
     }
 
@@ -115,16 +121,32 @@ public class DeploymentBuildMarker
             @NonNull
             TaskListener listener)
     {
-        perform(build, listener);
+        perform(build, env, listener);
     }
 
-    private void perform(
+    public void perform(
+            @NonNull
             Run<?, ?> build,
+            @NonNull
+            EnvVars env,
+            @NonNull
             TaskListener listener)
     {
-        Environment environment = new Environment(environmentId, environmentName, environmentType);
+        String name = isNotBlank(environmentName) ? env.expand(environmentName) : environmentType.name();
+        String id;
+        if (isNotBlank(environmentId))
+        {
+            String expanded = env.expand(environmentId);
+            id = expanded.length() > ID_MAX_LENGTH ? generateId(expanded) : expanded;
+        }
+        else
+        {
+            id = generateId(name);
+        }
+
+        Environment environment = new Environment(id, name, environmentType);
         listener.getLogger()
-                .format("Marking %s as deployment to %s", build, environment);
+                .format("Marking %s as deployment to %s%n", build, environment);
         build.addAction(new DeploymentEnvironmentAction(environment));
     }
 
@@ -135,6 +157,7 @@ public class DeploymentBuildMarker
     }
 
     @Extension
+    @Symbol("jiraDeploymentInfo")
     public static class Descriptor
             extends BuildStepDescriptor<Publisher>
     {
@@ -179,16 +202,38 @@ public class DeploymentBuildMarker
         {
             if (isBlank(value))
             {
-                return FormValidation.validateRequired(value);
+                // Optional: falls back to the environment type when left blank.
+                return FormValidation.ok();
             }
-            else if (length(value.trim()) > 255)
+            else if (length(value.trim()) > NAME_MAX_LENGTH)
             {
-                return FormValidation.error(org.marvelution.jji.Messages.maximum_length(255));
+                return FormValidation.error(org.marvelution.jji.Messages.maximum_length(NAME_MAX_LENGTH));
             }
             else
             {
                 return FormValidation.ok();
             }
+        }
+
+        @SuppressWarnings({"lgtm[jenkins/csrf]",
+                "lgtm[jenkins/no-permission-check]"})
+        public FormValidation doCheckEnvironmentType(
+                @QueryParameter
+                String value)
+        {
+            if (isBlank(value))
+            {
+                return FormValidation.error(org.marvelution.jji.Messages.environment_type_required());
+            }
+            for (Environment.Type type : Environment.Type.values())
+            {
+                if (type.name()
+                        .equalsIgnoreCase(value.trim()))
+                {
+                    return FormValidation.ok();
+                }
+            }
+            return FormValidation.error(org.marvelution.jji.Messages.invalid_environment_type(value.trim()));
         }
 
         @SuppressWarnings({"lgtm[jenkins/csrf]",

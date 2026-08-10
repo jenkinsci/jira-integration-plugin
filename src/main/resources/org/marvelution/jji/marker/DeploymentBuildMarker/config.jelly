@@ -1,12 +1,25 @@
 <?jelly escape-by-default='true'?>
+<!--
+  Config form for DeploymentBuildMarker.
+
+  Place at:
+    src/main/resources/org/marvelution/jji/marker/DeploymentBuildMarker/config.jelly
+
+  environmentType is required (backed by the @DataBoundConstructor); environmentId
+  and environmentName are optional (@DataBoundSetter) and rendered accordingly.
+-->
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-	<f:entry field="environmentId" title="${%environment.id}" description="${%environment.id.description}">
-		<f:textbox />
-	</f:entry>
-	<f:entry field="environmentName" title="${%environment.name}" description="${%environment.name.description}">
-		<f:textbox />
-	</f:entry>
-	<f:entry field="environmentType" title="${%environment.type}" description="${%environment.type.description}">
-		<f:select />
-	</f:entry>
+
+    <f:entry title="${%Environment Type}" field="environmentType">
+        <f:select/>
+    </f:entry>
+
+    <f:entry title="${%Environment Name}" field="environmentName">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Environment Id}" field="environmentId">
+        <f:textbox/>
+    </f:entry>
+
 </j:jelly>
