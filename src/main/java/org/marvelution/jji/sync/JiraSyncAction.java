@@ -15,12 +15,11 @@ import org.marvelution.jji.configuration.*;
 import hudson.model.*;
 import hudson.security.*;
 import hudson.util.*;
+import hudson.util.FormApply.NotificationType;
 import net.sf.json.*;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.*;
 import org.slf4j.*;
-
-import static hudson.util.QuotedStringTokenizer.*;
 
 public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
         implements Action
@@ -93,19 +92,19 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
 
             if (selectedSites.isEmpty())
             {
-                generateResponse(request, response, Messages.no_sites_selected(), "WARNING");
+                generateResponse(request, response, Messages.no_sites_selected(), NotificationType.WARNING);
             }
             else
             {
                 sync(site -> selectedSites.contains(site.getIdentifier()));
 
-                generateResponse(request, response, Messages.triggered_sync_of(getTargetDisplayName()), "OK");
+                generateResponse(request, response, Messages.triggered_sync_of(getTargetDisplayName()), NotificationType.SUCCESS);
             }
         }
         catch (Exception e)
         {
             logger.log(Level.SEVERE, "Failed to synchronize " + getTargetDisplayName() + " with Jira; " + e.getMessage(), e);
-            generateResponse(request, response, Messages.unable_to_trigger_sync_of(getTargetDisplayName()), "ERROR");
+            generateResponse(request, response, Messages.unable_to_trigger_sync_of(getTargetDisplayName()), NotificationType.ERROR);
         }
 
     }
@@ -114,10 +113,10 @@ public abstract class JiraSyncAction<S extends Saveable & AccessControlled>
             StaplerRequest2 request,
             StaplerResponse2 response,
             String message,
-            String type)
+            NotificationType type)
             throws IOException, ServletException
     {
-        FormApply.applyResponse("notificationBar.show(" + quote(message) + ",notificationBar." + type + ")")
+        FormApply.showNotification(message, type)
                 .generateResponse(request, response, this);
     }
 
