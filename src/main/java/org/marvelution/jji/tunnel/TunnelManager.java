@@ -134,7 +134,7 @@ public class TunnelManager
             }
 
             Node master = Jenkins.get();
-            CloudflareClientInstallation installation = getInstallation();
+            CloudflareClientInstallation installation = getInstallation(log);
             if (installation == null)
             {
                 log.getLogger()
@@ -229,11 +229,13 @@ public class TunnelManager
         }
     }
 
-    private CloudflareClientInstallation getInstallation()
+    private CloudflareClientInstallation getInstallation(TaskListener log)
     {
-        CloudflareClientInstallation[] installations = Jenkins.get()
-                .getDescriptorByType(CloudflareClientInstallation.DescriptorImpl.class)
-                .getInstallations();
+        CloudflareClientInstallation.DescriptorImpl descriptor = Jenkins.get()
+                .getDescriptorByType(CloudflareClientInstallation.DescriptorImpl.class);
+        // Make sure instances that were set up with an older plugin version move to the bundled default version.
+        descriptor.upgradeOutdatedInstallations(log);
+        CloudflareClientInstallation[] installations = descriptor.getInstallations();
         if (installations.length > 0)
         {
             return installations[0];
@@ -269,6 +271,7 @@ public class TunnelManager
                     Collections.singletonList(property));
 
             descriptor.setInstallations(installation);
+            descriptor.save();
             return installation;
         }
         catch (Exception e)
