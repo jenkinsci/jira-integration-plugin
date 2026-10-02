@@ -40,8 +40,8 @@
         <filterModified>true</filterModified>
 
         <jenkins.integration.common.version>1.62</jenkins.integration.common.version>
-        <jenkins.baseline>2.479</jenkins.baseline>
-        <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+        <jenkins.baseline>2.492</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <slf4jVersion>2.0.6</slf4jVersion>
 
         <useBeta>true</useBeta>
@@ -55,7 +55,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>4136.vca_c3202a_7fd1</version>
+                <version>5473.vb_9533d9e5d88</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -63,7 +63,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.18.0</version>
+                <version>3.19.0</version>
             </dependency>
 
             <dependency>
