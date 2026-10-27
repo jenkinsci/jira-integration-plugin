@@ -297,6 +297,20 @@
             <id>repo.jenkins-ci.org</id>
             <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
+        <pluginRepository>
+            <id>marvelution-releases</id>
+            <url>https://packages.marvelution.com/maven/external-maven-releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </pluginRepository>
+        <pluginRepository>
+            <id>marvelution-snapshots</id>
+            <url>https://packages.marvelution.com/maven/external-maven-snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
     </pluginRepositories>
 
     <developers>
