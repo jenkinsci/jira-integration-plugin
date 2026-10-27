@@ -337,9 +337,13 @@ public class JiraSiteManagement
     public void doUnregister(StaplerRequest2 request)
             throws IOException
     {
-        SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
+        SyncTokenSecurityContext context = SyncTokenSecurityContext.checkSyncTokenAuthentication(request);
         URI url = URI.create(getJsonFromRequest(request).getString("url"));
+        // A sync token authorizes operations only on the site that issued it. Unregister the requested site
+        // only when it is that same site, so a token from one registered Jira site cannot unregister another.
         sitesConfiguration.findSite(url)
+                .filter(site -> context.getSite() != null
+                        && Objects.equals(site.getIdentifier(), context.getSite().getIdentifier()))
                 .ifPresent(sitesConfiguration::unregisterSite);
     }
 

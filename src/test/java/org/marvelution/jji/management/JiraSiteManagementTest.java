@@ -63,6 +63,25 @@ class JiraSiteManagementTest
     }
 
     @Test
+    void testUnregisterJiraSite_CrossSiteDenied()
+            throws Exception
+    {
+        JiraSite otherSite = new JiraSite(URI.create("http://localhost:8080/jira/rest/jenkins/latest")).withName("Other Jira")
+                .withIdentifier("other-identifier")
+                .withSharedSecret(SharedSecretGenerator.generate());
+        injectSite(jiraSite);
+        injectSite(otherSite);
+
+        // A valid sync token for jiraSite must not be able to unregister a different site.
+        try (Response response = unregisterJiraSite(otherSite,
+                request -> signTokenAuth(request.build(), jiraSite, jenkins.contextPath).newBuilder()))
+        {
+            assertThat(sitesConfiguration.getSites()).hasSize(2)
+                    .contains(otherSite);
+        }
+    }
+
+    @Test
     void testUnregisterJiraSite_AccessDenied()
             throws Exception
     {
