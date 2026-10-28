@@ -25,7 +25,7 @@ public class CloudflareClientInstallation
         implements NodeSpecific<CloudflareClientInstallation>
 {
 
-    static final String DEFAULT_VERSION = "2026.9.3";
+    static final String DEFAULT_VERSION = "2026.10.5";
 
     @DataBoundConstructor
     public CloudflareClientInstallation(
