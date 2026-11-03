@@ -262,7 +262,7 @@
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
                     <pluginFirstClassLoader>true</pluginFirstClassLoader>
-                    <defaultPort>8080</defaultPort>
+                    <defaultPort>8081</defaultPort>
                     <jenkinsHome>${jenkins.home}</jenkinsHome>
                     <webApp>
                         <contextPath>/</contextPath>
