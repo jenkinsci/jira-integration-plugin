@@ -109,6 +109,10 @@ class BuildListenerTest
         jira.enqueue(new MockResponse().setResponseCode(202));
         jira.enqueue(new MockResponse().setResponseCode(202));
         jira2.enqueue(new MockResponse().setResponseCode(202));
+        BuildListener.startNotificationDelay = 0;
+        // Still running once the start notification is due
+        project.getBuildersList()
+               .add(new SleepBuilder(2000));
 
         FreeStyleBuild build = project.scheduleBuild2(0)
                                       .get(10, TimeUnit.SECONDS);
@@ -126,6 +130,25 @@ class BuildListenerTest
         assertThat(verifyNotificationSend(jira2, build, "POST").getBody()
                            .readUtf8()).contains("\"building\":false");
         assertThat(jira2.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    void testNotify_BuildStarted_CompletedBeforeDue()
+            throws Exception
+    {
+        enableBuildStarted(jira);
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira2.enqueue(new MockResponse().setResponseCode(202));
+        BuildListener.startNotificationDelay = 30;
+
+        FreeStyleBuild build = project.scheduleBuild2(0)
+                                      .get(10, TimeUnit.SECONDS);
+
+        jenkins.assertBuildStatusSuccess(build);
+        jenkins.assertLogNotContains("that a build has started", build);
+        // A build that completes before its start notification is due is only notified as completed
+        verifyNotificationSend(jira, build, "PUT");
+        assertThat(jira.getRequestCount()).isEqualTo(1);
     }
 
     String getBuildTriggerPath(Item item)

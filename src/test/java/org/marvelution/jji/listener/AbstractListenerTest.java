@@ -65,6 +65,7 @@ class AbstractListenerTest
     {
         jira.shutdown();
         jira2.shutdown();
+        BuildListener.startNotificationDelay = 30;
     }
 
     void fixedResponse(
