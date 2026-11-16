@@ -101,6 +101,33 @@ class BuildListenerTest
                               .fields()));
     }
 
+    @Test
+    void testNotify_BuildStarted()
+            throws Exception
+    {
+        enableBuildStarted(jira);
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira2.enqueue(new MockResponse().setResponseCode(202));
+
+        FreeStyleBuild build = project.scheduleBuild2(0)
+                                      .get(10, TimeUnit.SECONDS);
+
+        jenkins.assertBuildStatusSuccess(build);
+        jenkins.assertLogContains("Notified Jira that a build has started", build);
+        jenkins.assertLogNotContains("Notified Jira 2 that a build has started", build);
+        // The build data is posted when the build starts, also to a site that otherwise gets the parent hashes
+        RecordedRequest started = verifyNotificationSend(jira, build, "POST");
+        assertThat(started.getBody()
+                          .readUtf8()).contains("\"building\":true")
+                                      .doesNotContain("\"result\":\"SUCCESS\"");
+        verifyNotificationSend(jira, build, "PUT");
+        // Sites that don't store running builds only hear of the completed build
+        assertThat(verifyNotificationSend(jira2, build, "POST").getBody()
+                           .readUtf8()).contains("\"building\":false");
+        assertThat(jira2.getRequestCount()).isEqualTo(1);
+    }
+
     String getBuildTriggerPath(Item item)
     {
         return REST_BASE_PATH + JiraUtils.getJobHash(item) + "/1";

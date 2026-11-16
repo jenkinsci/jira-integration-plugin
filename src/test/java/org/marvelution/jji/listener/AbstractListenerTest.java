@@ -89,6 +89,16 @@ class AbstractListenerTest
         getJiraSitesConfiguration().registerSite(site);
     }
 
+    void enableBuildStarted(MockWebServer jira)
+    {
+        URI serverUri = jira.url("rest/jenkins/latest")
+                .uri();
+        getJiraSitesConfiguration().stream()
+                .filter(site -> site.getUri()
+                        .equals(serverUri))
+                .forEach(site -> site.setBuildStarted(true));
+    }
+
     void verifyDeletionSend(
             MockWebServer jira,
             Item item)

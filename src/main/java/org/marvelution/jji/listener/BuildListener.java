@@ -10,7 +10,8 @@ import hudson.model.*;
 import hudson.model.listeners.*;
 
 /**
- * {@link RunListener} implementation that will notify all registered Jira instances that a build completed or was deleted.
+ * {@link RunListener} implementation that will notify all registered Jira instances that a build started, completed or was
+ * deleted.
  *
  * @author Mark Rekveld
  * @since 3.5.0
@@ -26,6 +27,14 @@ public class BuildListener
 	public void setClient(SitesClient client)
 	{
 		this.client = client;
+	}
+
+	@Override
+	public void onStarted(
+			Run run,
+			TaskListener listener)
+	{
+		client.notifyBuildStarted(run, listener);
 	}
 
 	@Override
