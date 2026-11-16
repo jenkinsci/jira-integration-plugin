@@ -55,6 +55,7 @@ public class JiraSite
     private transient JSONObject context;
     private boolean postJson;
     private boolean tunneled;
+    private boolean buildStarted;
     private int lastStatus = 200;
     private boolean upToDate = true;
 
@@ -186,6 +187,27 @@ public class JiraSite
     public JiraSite withPostJson(boolean postJson)
     {
         this.postJson = postJson;
+        return this;
+    }
+
+    /**
+     * Whether the site stores running builds, and so wants to be notified when a build starts (JJI-1148). Sites tell so in
+     * their registration details; sites that don't, never get the notification.
+     */
+    public boolean isBuildStarted()
+    {
+        return buildStarted;
+    }
+
+    @DataBoundSetter
+    public void setBuildStarted(boolean buildStarted)
+    {
+        this.buildStarted = buildStarted;
+    }
+
+    public JiraSite withBuildStarted(boolean buildStarted)
+    {
+        this.buildStarted = buildStarted;
         return this;
     }
 
@@ -325,6 +347,19 @@ public class JiraSite
                 .build());
     }
 
+    /**
+     * The build data is always posted, also to sites that can reach Jenkins, so that the site doesn't call Jenkins for a build
+     * that is still running.
+     */
+    public Request createNotifyBuildStarted(Run run)
+    {
+        return signRequest(new Request.Builder().post(RequestBody.create(JiraUtils.asJson(run,
+                        ParserProvider.buildParser()
+                                .fields()), JSON))
+                .url(getHttpUrl("integration/" + JiraUtils.getJobHash(run) + "/" + run.getNumber()))
+                .build());
+    }
+
     public Request createNotifyJobDeletedRequest(Item item)
     {
         return signRequest(new Request.Builder().delete()
@@ -450,6 +485,7 @@ public class JiraSite
         setName(details.getString("name"));
         setPostJson(details.optBoolean("firewalled", false));
         setTunneled(details.optBoolean("tunneled", false));
+        setBuildStarted(details.optBoolean("buildStarted", false));
         JSONObject context = details.optJSONObject("context");
         if (context != null)
         {
@@ -463,7 +499,8 @@ public class JiraSite
                 .withName(details.getString("name"))
                 .withSharedSecret(details.getString("sharedSecret"))
                 .withPostJson(details.optBoolean("firewalled", false))
-                .withTunneled(details.optBoolean("tunneled", false));
+                .withTunneled(details.optBoolean("tunneled", false))
+                .withBuildStarted(details.optBoolean("buildStarted", false));
         JSONObject context = details.optJSONObject("context");
         if (context == null && details.has("contextJson"))
         {

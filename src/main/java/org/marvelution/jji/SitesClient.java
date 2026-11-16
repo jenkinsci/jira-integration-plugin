@@ -169,6 +169,36 @@ public class SitesClient
         });
     }
 
+    /**
+     * Notify the sites that store running builds that a build started (JJI-1148).
+     */
+    public void notifyBuildStarted(
+            Run<?, ?> run,
+            TaskListener listener)
+    {
+        BuildLogger logger = new BuildLogger(listener);
+
+        OkHttpClient httpClient = HttpClientProvider.httpClient();
+        doWithSites(JiraSite::isBuildStarted, site -> {
+            try (Response response = httpClient.newCall(site.createNotifyBuildStarted(run))
+                    .execute())
+            {
+                if (response.isSuccessful())
+                {
+                    logger.info("Notified %s that a build has started.%n", site.getName());
+                }
+                else
+                {
+                    logger.error("Unable to notify %s: [%d] %s", site.getName(), response.code(), response.message());
+                }
+            }
+            catch (Exception e)
+            {
+                logger.error("Failed to notify %s on this build start -> %s", site, e.getMessage());
+            }
+        });
+    }
+
     public void notifyJobCreated(Item item)
     {
         notifyJobCreated(DEFAULT_SITE_FILTER, item);

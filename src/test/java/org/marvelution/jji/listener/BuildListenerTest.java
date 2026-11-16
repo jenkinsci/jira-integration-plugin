@@ -101,6 +101,56 @@ class BuildListenerTest
                               .fields()));
     }
 
+    @Test
+    void testNotify_BuildStarted()
+            throws Exception
+    {
+        enableBuildStarted(jira);
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira2.enqueue(new MockResponse().setResponseCode(202));
+        BuildListener.startNotificationDelay = 0;
+        // Still running once the start notification is due
+        project.getBuildersList()
+               .add(new SleepBuilder(2000));
+
+        FreeStyleBuild build = project.scheduleBuild2(0)
+                                      .get(10, TimeUnit.SECONDS);
+
+        jenkins.assertBuildStatusSuccess(build);
+        jenkins.assertLogContains("Notified Jira that a build has started", build);
+        jenkins.assertLogNotContains("Notified Jira 2 that a build has started", build);
+        // The build data is posted when the build starts, also to a site that otherwise gets the parent hashes
+        RecordedRequest started = verifyNotificationSend(jira, build, "POST");
+        assertThat(started.getBody()
+                          .readUtf8()).contains("\"building\":true")
+                                      .doesNotContain("\"result\":\"SUCCESS\"");
+        verifyNotificationSend(jira, build, "PUT");
+        // Sites that don't store running builds only hear of the completed build
+        assertThat(verifyNotificationSend(jira2, build, "POST").getBody()
+                           .readUtf8()).contains("\"building\":false");
+        assertThat(jira2.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    void testNotify_BuildStarted_CompletedBeforeDue()
+            throws Exception
+    {
+        enableBuildStarted(jira);
+        jira.enqueue(new MockResponse().setResponseCode(202));
+        jira2.enqueue(new MockResponse().setResponseCode(202));
+        BuildListener.startNotificationDelay = 30;
+
+        FreeStyleBuild build = project.scheduleBuild2(0)
+                                      .get(10, TimeUnit.SECONDS);
+
+        jenkins.assertBuildStatusSuccess(build);
+        jenkins.assertLogNotContains("that a build has started", build);
+        // A build that completes before its start notification is due is only notified as completed
+        verifyNotificationSend(jira, build, "PUT");
+        assertThat(jira.getRequestCount()).isEqualTo(1);
+    }
+
     String getBuildTriggerPath(Item item)
     {
         return REST_BASE_PATH + JiraUtils.getJobHash(item) + "/1";
